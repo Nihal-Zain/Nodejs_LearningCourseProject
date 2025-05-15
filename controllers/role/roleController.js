@@ -1,6 +1,6 @@
 const db = require('../../config/db');
 
-exports.getQuizResults = async (req, res) => {
+exports.getRole = async (req, res) => {
   try {
     const [results] = await db.promise().query('SELECT * FROM role');
     res.json(results);

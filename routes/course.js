@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getQuizResults } = require('../controllers/course/courseController');
+const { getcourses } = require('../controllers/course/courseController');
 
-router.get('/courses', getQuizResults);
+router.get('/courses', getcourses);
 
 module.exports = router;

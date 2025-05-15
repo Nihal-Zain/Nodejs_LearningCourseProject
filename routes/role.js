@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getQuizResults } = require('../controllers/role/roleController');
+const { getRole } = require('../controllers/role/roleController');
 
-router.get('/role', getQuizResults);
+router.get('/role', getRole);
 
 module.exports = router;
 

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getQuizResults } = require('../controllers/upload/uploadController');
+const { getUpload } = require('../controllers/upload/uploadController');
 
-router.get('/upload', getQuizResults);
+router.get('/upload', getUpload);
 
 module.exports = router;
 

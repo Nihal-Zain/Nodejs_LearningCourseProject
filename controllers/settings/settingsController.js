@@ -1,6 +1,6 @@
 const db = require('../../config/db');
 
-exports.getQuizResults = async (req, res) => {
+exports.getSettings = async (req, res) => {
   try {
     const [results] = await db.promise().query('SELECT * FROM settings');
     res.json(results);

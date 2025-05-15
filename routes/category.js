@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getQuizResults } = require('../controllers/category/categoryController');
+const { getCategory } = require('../controllers/category/categoryController');
 
-router.get('/categories', getQuizResults);
+router.get('/categories', getCategory);
 
 module.exports = router;
