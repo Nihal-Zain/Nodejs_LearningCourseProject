@@ -1,15 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db');
+const { getQuizResults } = require('../controllers/users_info/usersInfoController');
 
-router.get('/users_info', async (req, res) => {
-  try {
-    const [results] = await db.query('SELECT * FROM users_info');
-    res.json(results);
-  } catch (err) {
-    console.error('DB Query Error:', err);
-    res.status(500).json({ error: 'Database error' });
-  }
-});
+router.get('/users_info', getQuizResults);
 
 module.exports = router;
+

@@ -1,15 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db');
+const { getQuizResults } = require('../controllers/upload2/upload2Controller');
 
-router.get('/upload2', async (req, res) => {
-  try {
-    const [results] = await db.query('SELECT * FROM upload2');
-    res.json(results);
-  } catch (err) {
-    console.error('DB Query Error:', err);
-    res.status(500).json({ error: 'Database error' });
-  }
-});
+router.get('/upload2', getQuizResults);
 
 module.exports = router;
+
+
+
