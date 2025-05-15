@@ -13,7 +13,7 @@ const uploadRouter = require('./routes/upload');
 const upload2Router = require('./routes/upload2');
 const usersRouter = require('./routes/users');
 const usersInfoRouter = require('./routes/users_info');
-
+const blogsRouter = require('./routes/blogs'); 
 const app = express();
 
 // Middleware
@@ -33,4 +33,6 @@ app.use('/api', uploadRouter);
 app.use('/api', upload2Router);
 app.use('/api', usersRouter);
 app.use('/api', usersInfoRouter);
+app.use('/api', blogsRouter); 
+
 module.exports = app; // Export app for server.js
