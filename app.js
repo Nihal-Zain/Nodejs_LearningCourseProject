@@ -1,6 +1,7 @@
 // app.js
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const categoryRoutes = require('./routes/category');
 const courseRoutes = require('./routes/course');
 const questionRoutes = require('./routes/question');
@@ -21,7 +22,7 @@ app.use(cors({
   origin: 'http://localhost:5173',  
 }));
 app.use(express.json());
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api', categoryRoutes);
 app.use('/api', courseRoutes);
