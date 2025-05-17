@@ -11,7 +11,7 @@ exports.getcourses = async (req, res) => {
   }
 };
 
-// Fetch Courses by Category
+// Fetch unique subCategory to filter by it
 exports.getSubCategories = async(req,res) =>{
   try {
     const [results] = await db.promise().query('SELECT DISTINCT(sub_category) FROM `course` WHERE category = ?', [req.params.category]);
