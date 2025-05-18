@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const categoryRoutes = require('./routes/category');
 const courseRoutes = require('./routes/course');
+const couponsRoutes = require('./routes/coupons');
 const questionRoutes = require('./routes/question');
 const questionUserRoutes = require('./routes/question_user');
 const quizResultsRouter = require('./routes/quiz_results');
@@ -35,5 +36,6 @@ app.use('/api', upload2Router);
 app.use('/api', usersRouter);
 app.use('/api', usersInfoRouter);
 app.use('/api', blogsRouter); 
+app.use('/api', couponsRoutes);
 
 module.exports = app; // Export app for server.js
