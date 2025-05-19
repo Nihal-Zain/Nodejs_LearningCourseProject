@@ -19,6 +19,23 @@ const blogsRouter = require('./routes/blogs');
 const app = express();
 
 // Middleware
+// const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173'];
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     // allow requests with no origin (like mobile apps or curl)
+//     if (!origin) return callback(null, true);
+//     if (allowedOrigins.includes(origin)) {
+//       return callback(null, true);
+//     }
+//     return callback(new Error('Not allowed by CORS'));
+//   },
+//   credentials: true,
+//   origin: [
+//     'http://localhost:5173',
+//     'http://localhost:3000',
+//   ]
+// }));
+// Middleware
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173'];
 app.use(cors({
   origin: function (origin, callback) {
@@ -32,8 +49,6 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api', categoryRoutes);
 app.use('/api', courseRoutes);
@@ -49,5 +64,8 @@ app.use('/api', usersRouter);
 app.use('/api', usersInfoRouter);
 app.use('/api', blogsRouter); 
 app.use('/api', couponsRoutes);
+
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 module.exports = app; // Export app for server.js
