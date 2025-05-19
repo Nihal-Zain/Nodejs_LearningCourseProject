@@ -1,7 +1,7 @@
 const db = require('../../config/db');
 
-// Fetch All Courses
-exports.getcourses = async (req, res) => {
+// Get all courses
+exports.getCourses = async (req, res) => {
   try {
     const [results] = await db.promise().query('SELECT * FROM course');
     res.json(results);
@@ -11,22 +11,24 @@ exports.getcourses = async (req, res) => {
   }
 };
 
-// Fetch unique subCategory to filter by it
-exports.getSubCategories = async(req,res) =>{
+// Get distinct sub-categories for a category
+exports.getSubCategories = async (req, res) => {
   try {
-    const [results] = await db.promise().query('SELECT DISTINCT(sub_category) FROM `course` WHERE category = ?', [req.params.category]);
+    const [results] = await db.promise().query(
+      'SELECT DISTINCT sub_category FROM course WHERE category = ?',
+      [req.params.category]
+    );
     res.json(results);
   } catch (err) {
     console.error('DB Query Error:', err);
     res.status(500).json({ error: 'Database error' });
   }
-}
+};
 
-// fetch course by ID
+// Get course by ID
 exports.getCourseById = async (req, res) => {
-  const courseId = req.params.id;
   try {
-    const [results] = await db.promise().query('SELECT * FROM course WHERE id=?', [courseId]);
+    const [results] = await db.promise().query('SELECT * FROM course WHERE id = ?', [req.params.id]);
     if (results.length === 0) {
       return res.status(404).json({ error: 'Course not found' });
     }
@@ -35,4 +37,122 @@ exports.getCourseById = async (req, res) => {
     console.error('DB Query Error:', err);
     res.status(500).json({ error: 'Database error' });
   }
-}
+};
+
+// Add new course
+exports.addCourse = async (req, res) => {
+  const {
+    code,
+    title,
+    short_description,
+    description,
+    language,
+    category_id,
+    category,
+    sub_category_id,
+    sub_category,
+    price,
+    level,
+    status,
+    course_type,
+    city
+  } = req.body;
+
+  try {
+    const [result] = await db.promise().query(
+      `INSERT INTO course 
+       (code, title, short_description, description, language, category_id,category ,sub_category_id,sub_category,price, level, status, course_type, city) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)`,
+      [
+        code,
+        title,
+        short_description,
+        description,
+        language,
+        category_id,
+        category,
+        sub_category_id,
+        sub_category,
+        price,
+        level,
+        status,
+        course_type,
+        city
+      ]
+    );
+    res.status(201).json({ message: 'Course added successfully', courseId: result.insertId });
+  } catch (err) {
+    console.error('DB Insert Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
+
+// Update course by ID
+
+exports.updateCourse = async (req, res) => {
+  const courseId = req.params.id;
+  const {
+    code,
+    title,
+    short_description,
+    description,
+    language,
+    category_id,
+    sub_category_id,
+    price,
+    level,
+    status,
+    course_type,
+    city
+  } = req.body;
+
+  try {
+    const [result] = await db.promise().query(
+      `UPDATE course SET 
+       code = ?, title = ?, short_description = ?, description = ?, language = ?, category_id = ?, sub_category_id = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?
+       WHERE id = ?`,
+      [
+        code,
+        title,
+        short_description,
+        description,
+        language,
+        category_id,
+        sub_category_id,
+        price,
+        level,
+        status,
+        course_type,
+        city,      // city before courseId
+        courseId   // courseId last, for WHERE id=?
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    res.json({ message: 'Course updated successfully' });
+  } catch (err) {
+    console.error('DB Update Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
+
+
+// Delete course by ID
+exports.deleteCourse = async (req, res) => {
+  const courseId = req.params.id;
+  try {
+    const [result] = await db.promise().query('DELETE FROM course WHERE id = ?', [courseId]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    res.json({ message: 'Course deleted successfully' });
+  } catch (err) {
+    console.error('DB Delete Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
