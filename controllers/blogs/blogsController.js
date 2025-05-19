@@ -62,16 +62,19 @@ exports.getBlogById = async (req, res) => {
 // Create a new blog
 exports.createBlog = async (req, res) => {
   const {
-    blog_category_id, user_id, title, keywords,
-    description, thumbnail, banner,
-    is_popular = false, likes = 0, status = 1
+     title, 
+     keywords,
+    description
   } = req.body;
+
+   const thumbnailPath = req.files.thumbnail?.[0]?.filename || null;
+    const bannerPath = req.files.banner?.[0]?.filename || null;
 
   try {
     const [result] = await db.promise().query(
       `INSERT INTO blogs (blog_category_id, user_id, title, keywords, description, thumbnail, banner, is_popular, likes, added_date, updated_date, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)`,
-      [blog_category_id, user_id, title, keywords, description, thumbnail, banner, is_popular, likes, status]
+      [1, 1, title, keywords, description, thumbnailPath, bannerPath, false, 0, 1]
     );
     res.status(201).json({ message: 'Blog created', blog_id: result.insertId });
   } catch (err) {

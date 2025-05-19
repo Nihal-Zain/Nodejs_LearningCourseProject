@@ -26,8 +26,6 @@ app.use(cors({
   ]
 }));
 
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api', categoryRoutes);
 app.use('/api', courseRoutes);
@@ -43,5 +41,8 @@ app.use('/api', usersRouter);
 app.use('/api', usersInfoRouter);
 app.use('/api', blogsRouter); 
 app.use('/api', couponsRoutes);
+
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 module.exports = app; // Export app for server.js
