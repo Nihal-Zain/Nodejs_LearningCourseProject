@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { getBlogs, getBlogById } = require('../controllers/blogs/blogsController');
+const { getBlogs, getBlogById, createBlog } = require('../controllers/blogs/blogsController');
 const upload = require('../middlewares/upload');
 const db = require('../config/db');
 
 // Existing routes
 router.get('/blogs', getBlogs);
 router.get('/blogs/:id', getBlogById);
+router.post('/blogs',createBlog)
 
 //  New route for uploading banner image
 router.post('/blogs/:id/banner', upload.single('banner'), async (req, res) => {
