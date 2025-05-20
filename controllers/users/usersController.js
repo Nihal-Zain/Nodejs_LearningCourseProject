@@ -35,12 +35,12 @@ exports.createUser = async (req, res) => {
 // UPDATE a user by ID
 exports.updateUser = async (req, res) => {
   const userId = req.params.id;
-  const {first_name, last_name, email } = req.body;
+  const {first_name, last_name, email, password } = req.body;
 
   try {
     await db.promise().query(
-      `UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE id = ?`,
-      [first_name, last_name, email, userId]
+      `UPDATE users SET first_name = ?, last_name = ?, email = ?, password = ? WHERE id = ?`,
+      [first_name, last_name, email, password, userId]
     );
     res.json({ message: 'User updated' });
   } catch (err) {
