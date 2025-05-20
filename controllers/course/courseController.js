@@ -25,6 +25,7 @@ exports.getSubCategories = async (req, res) => {
   }
 };
 
+
 // Get course by ID
 exports.getCourseById = async (req, res) => {
   try {
@@ -97,8 +98,10 @@ exports.updateCourse = async (req, res) => {
     short_description,
     description,
     language,
+    category,
     category_id,
     sub_category_id,
+    sub_category,
     price,
     level,
     status,
@@ -109,7 +112,7 @@ exports.updateCourse = async (req, res) => {
   try {
     const [result] = await db.promise().query(
       `UPDATE course SET 
-       code = ?, title = ?, short_description = ?, description = ?, language = ?, category_id = ?, sub_category_id = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?
+       code = ?, title = ?, short_description = ?, description = ?, language = ?, category=?,category_id = ?, sub_category_id = ?, sub_category=?, price = ?, level = ?, status = ?, course_type = ?, city = ?
        WHERE id = ?`,
       [
         code,
@@ -117,8 +120,10 @@ exports.updateCourse = async (req, res) => {
         short_description,
         description,
         language,
+        category,
         category_id,
         sub_category_id,
+        sub_category,
         price,
         level,
         status,

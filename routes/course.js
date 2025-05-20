@@ -15,6 +15,8 @@ router.get('/courses', getCourses);
 // Get sub-categories by category
 router.get('/courses/category/:category', getSubCategories);
 
+router.get('/subcategories/:category', getSubCategories);
+
 // Get course by id
 router.get('/courses/id/:id', getCourseById);
 
