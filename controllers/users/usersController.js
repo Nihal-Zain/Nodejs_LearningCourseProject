@@ -18,12 +18,12 @@ exports.getUsers = async (req, res) => {
 
 // CREATE a new user
 exports.createUser = async (req, res) => {
-  const { first_name, last_name, email, role_id , is_instructor, verification_code} = req.body;
+  const { first_name, last_name, email, role_id ,password, is_instructor, verification_code} = req.body;
 
   try {
     const [result] = await db.promise().query(
-      `INSERT INTO users (first_name, last_name, email, role_id, is_instructor, date_added, verification_code) VALUES (?, ?, ?, ?, ?, NOW(),?)`,
-      [first_name, last_name, email, role_id, is_instructor,  verification_code]
+      `INSERT INTO users (first_name, last_name, email, role_id, is_instructor, password, date_added, verification_code) VALUES (?, ?, ?, ?,?, ?, NOW(),?)`,
+      [first_name, last_name, email, role_id, is_instructor,password, verification_code]
     );
     res.status(201).json({ message: 'User created', userId: result.insertId });
   } catch (err) {
