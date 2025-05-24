@@ -16,7 +16,11 @@ const upload2Router = require('./routes/upload2');
 const usersRouter = require('./routes/users');
 const usersInfoRouter = require('./routes/users_info');
 const blogsRouter = require('./routes/blogs'); 
+const instructorRoutes = require('./routes/instructors');
+const contactRoutes = require('./routes/contactRoutes');
+const clientsRoutes = require('./routes/clientsRoutes');
 const app = express();
+
 
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173'];
 app.use(cors({
@@ -46,7 +50,9 @@ app.use('/api', upload2Router);
 app.use('/api', usersRouter);
 app.use('/api', usersInfoRouter);
 app.use('/api', couponsRoutes);
-
+app.use('/api', instructorRoutes);
+app.use('/api', contactRoutes);
+app.use('/api', clientsRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

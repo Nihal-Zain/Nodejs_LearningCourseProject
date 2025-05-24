@@ -1,25 +1,31 @@
+// middlewares/upload.js
 const multer = require('multer');
 const path = require('path');
 
-// Set storage engine
+// Storage configuration
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Save in /uploads
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
   },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // unique filename
-  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
 });
 
-// File filter (optional: allow only image types)
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
-  if (extname && mimetype) return cb(null, true);
-  cb('Error: Images Only!');
+// File filter to allow images only
+const imageFileFilter = (req, file, cb) => {
+  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg'];
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Images Only!'), false);
+  }
 };
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({
+  storage: storage,
+  fileFilter: imageFileFilter,
+});
 
 module.exports = upload;
