@@ -25,6 +25,20 @@ exports.getSubCategories = async (req, res) => {
   }
 };
 
+// Get distinct sub-categories for a category
+exports.getAllUniqueMainCategories = async (req, res) => {
+  try {
+    const [results] = await db.promise().query(
+      'SELECT DISTINCT category FROM `course`',
+    );
+    res.json(results);
+  } catch (err) {
+    console.error('DB Query Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
+
+
 
 // Get course by ID
 exports.getCourseById = async (req, res) => {

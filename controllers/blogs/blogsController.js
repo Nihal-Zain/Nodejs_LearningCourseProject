@@ -81,3 +81,20 @@ exports.createBlog = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.deleteBlog = async (req, res) => {
+  const blogId = req.params.id;
+  try {
+    const [result] = await db.promise().query(
+      'DELETE FROM blogs WHERE blog_id = ?',
+      [blogId]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+    res.json({ message: 'Blog deleted successfully' });
+  } catch (err) {
+    console.error('DB Delete Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
