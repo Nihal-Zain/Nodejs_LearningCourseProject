@@ -41,15 +41,19 @@ exports.deleteInstructor = (req, res) => {
 };
 //update instructor
 exports.updateInstructor = (req, res) => {
-    const instructorId = req.params.id;
-    const { name, short_description } = req.body;
-    const img = req.file ? `http://localhost:5000/uploads/${req.file.filename}` : null;
-    
-    const sql = 'UPDATE instructors SET name = ?, img = ?, short_description = ? WHERE id = ?';
-    db.query(sql, [name, img, short_description, instructorId], (err, result) => {
-        if (err) return res.status(500).json({ error: err });
-        if (result.affectedRows === 0) return res.status(404).json({ error: 'Instructor not found' });
-        res.json({ message: 'Instructor updated successfully' });
-    });
-}
+  const instructorId = req.params.id;
+  const { name, short_description, existingImg } = req.body;
+
+  const img = req.file
+    ? `http://localhost:5000/uploads/${req.file.filename}`
+    : existingImg || null;
+
+  const sql = 'UPDATE instructors SET name = ?, img = ?, short_description = ? WHERE id = ?';
+  db.query(sql, [name, img, short_description, instructorId], (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Instructor not found' });
+    res.json({ message: 'Instructor updated successfully' });
+  });
+};
+
 
