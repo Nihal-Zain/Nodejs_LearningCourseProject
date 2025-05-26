@@ -4,10 +4,15 @@ const db = require('../../config/db');
 exports.getUsers = async (req, res) => {
   try {
     const [results] = await db.promise().query(`SELECT 
-  users.*,
-  role.name AS Position
+  users.*, 
+  role.name AS position,
+  org.title AS organization_name,
+  manager.first_name AS manager_first_name,
+  manager.last_name AS manager_last_name
   FROM users
-  INNER JOIN role ON users.role_id = role.id;
+  INNER JOIN role ON users.role_id = role.id
+  LEFT JOIN organizations AS org ON users.organization_id = org.id
+  LEFT JOIN users AS manager ON users.manager_id = manager.id;
   `);
     res.json(results);
   } catch (err) {
@@ -16,14 +21,40 @@ exports.getUsers = async (req, res) => {
   }
 };
 
+
+exports.getAllManagerOfUsers = async (req, res) => {
+  const { orgId, role } = req.query;
+
+  let targetRoles = [];
+  if (role === '5') {
+    // If staff, get managers only
+    targetRoles = [4];
+  } else if (role === '4') {
+    // If manager, get submanagers and above
+    targetRoles = [3];
+  } else {
+    return res.json([]); // Return empty list for other roles
+  }
+
+  const sql = `
+    SELECT id, first_name, last_name 
+    FROM users 
+    WHERE organization_id = ? AND role_id IN (?)`;
+
+  db.query(sql, [orgId, targetRoles], (err, result) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(result);
+  });
+};
+
 // CREATE a new user
 exports.createUser = async (req, res) => {
-  const { first_name, last_name, email, role_id ,password, is_instructor, verification_code} = req.body;
+  const { first_name, last_name, email, role_id ,password, is_instructor, verification_code, manager_id, organization_id} = req.body;
 
   try {
     const [result] = await db.promise().query(
-      `INSERT INTO users (first_name, last_name, email, role_id, is_instructor, password, date_added, verification_code) VALUES (?, ?, ?, ?,?, ?, NOW(),?)`,
-      [first_name, last_name, email, role_id, is_instructor,password, verification_code]
+      `INSERT INTO users (first_name, last_name, email, role_id, is_instructor, password, date_added, verification_code, manager_id, organization_id) VALUES (?, ?, ?, ?,?, ?, NOW(),?,?,?)`,
+      [first_name, last_name, email, role_id, is_instructor,password, verification_code, manager_id, organization_id]
     );
     res.status(201).json({ message: 'User created', userId: result.insertId });
   } catch (err) {
