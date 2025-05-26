@@ -20,7 +20,11 @@ const instructorRoutes = require('./routes/instructors');
 const contactRoutes = require('./routes/contactRoutes');
 const clientsRoutes = require('./routes/clientsRoutes');
 const popularRoutes = require('./routes/popular_courses');
+const sectionRoutes = require('./routes/sectionRoutes');
+const questionsRoutes = require('./routes/questionRoutes');
+const choiceRoutes = require('./routes/choiceRoutes');
 const organizationRoutes = require('./routes/organizationsRoutes');
+
 const app = express();
 
 
@@ -55,8 +59,13 @@ app.use('/api', couponsRoutes);
 app.use('/api', instructorRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', clientsRoutes);
+app.use('/api', popularRoutes);
+app.use('/api', sectionRoutes);
+app.use('/api', questionsRoutes);
+app.use('/api', choiceRoutes);
 app.use('/api', popularRoutes)
 app.use('/api', organizationRoutes);
+
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
