@@ -19,7 +19,8 @@ const blogsRouter = require('./routes/blogs');
 const instructorRoutes = require('./routes/instructors');
 const contactRoutes = require('./routes/contactRoutes');
 const clientsRoutes = require('./routes/clientsRoutes');
-const popularRoutes = require('./routes/popular_courses')
+const popularRoutes = require('./routes/popular_courses');
+const organizationRoutes = require('./routes/organizationsRoutes');
 const app = express();
 
 
@@ -55,6 +56,7 @@ app.use('/api', instructorRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', clientsRoutes);
 app.use('/api', popularRoutes)
+app.use('/api', organizationRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
