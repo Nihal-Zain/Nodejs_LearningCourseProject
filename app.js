@@ -23,6 +23,7 @@ const popularRoutes = require('./routes/popular_courses');
 const sectionRoutes = require('./routes/sectionRoutes');
 const questionsRoutes = require('./routes/questionRoutes');
 const choiceRoutes = require('./routes/choiceRoutes');
+const subSectionsRoutes = require('./routes/subSectionsRoutes');
 const organizationRoutes = require('./routes/organizationsRoutes');
 
 const app = express();
@@ -65,6 +66,7 @@ app.use('/api', questionsRoutes);
 app.use('/api', choiceRoutes);
 app.use('/api', popularRoutes)
 app.use('/api', organizationRoutes);
+app.use('/api', subSectionsRoutes);
 
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
