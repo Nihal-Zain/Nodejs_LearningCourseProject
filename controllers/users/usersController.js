@@ -1,5 +1,46 @@
 const db = require('../../config/db');
 
+// LOGIN a user by id and password
+exports.login = async (req, res) => {
+  const { id, password } = req.body;
+
+  if (!id || !password) {
+    return res.status(400).json({ error: 'ID and password are required' });
+  }
+
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT 
+        users.id AS user_id,
+        users.first_name,
+        users.last_name,
+        users.email,
+        users.role_id,
+        role.name AS role_name,
+        users.organization_id
+      FROM users 
+      INNER JOIN role ON users.role_id = role.id
+      WHERE users.id = ? AND users.password = ?`,
+      [id, password]
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid ID or password' });
+    }
+
+    const user = rows[0];
+
+    res.json({
+      message: 'Login successful',
+      user,
+    });
+  } catch (err) {
+    console.error('Login Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
+
+
 // get all users
 exports.getUsers = async (req, res) => {
   try {
