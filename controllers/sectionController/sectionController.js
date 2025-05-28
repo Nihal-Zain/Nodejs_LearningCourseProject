@@ -55,29 +55,29 @@ exports.getSectionResults = (req, res) => {
 
 // Get results for each sub-section in a section
 exports.getSubSectionResults = (req, res) => {
-    const sectionId = req.params.id;
+    const user_id = req.params.id;
 
     const query = `
         SELECT 
-            ss.id AS sub_section_id,
-            ss.title AS sub_section_title,
-            COUNT(a.id) AS total_answers,
-            COALESCE(SUM(c.is_correct), 0) AS correct_answers,
-            ROUND(
-                CASE WHEN COUNT(a.id) = 0 THEN 0
-                     ELSE (COALESCE(SUM(c.is_correct), 0) / COUNT(a.id)) * 100
-                END
-            , 2) AS correct_percentage
-        FROM sub_sections ss
-        LEFT JOIN questions q ON q.sub_section_id = ss.id
-        LEFT JOIN answers a ON a.question_id = q.id
-        LEFT JOIN choices c ON a.choice_id = c.id
-        WHERE ss.section_id = ?
-        GROUP BY ss.id
-        ORDER BY ss.id DESC
+    a.user_id,
+    ss.id AS sub_section_id,
+    ss.title AS sub_section_title,
+    s.title AS section_title,
+    COUNT(q.id) AS total_questions_answered,
+    SUM(CASE WHEN c.is_correct = 1 THEN 1 ELSE 0 END) AS correct_answers
+    FROM answers a
+    JOIN questions q ON a.question_id = q.id
+    JOIN sub_sections ss ON q.sub_section_id = ss.id
+    JOIN sections s ON ss.section_id = s.id
+    JOIN choices c ON a.choice_id = c.id
+    WHERE a.user_id = ?
+    GROUP BY ss.id, ss.title, s.title
+    ORDER BY s.title, ss.title
+    LIMIT 0, 25;
+
     `;
 
-    db.query(query, [sectionId], (err, results) => {
+    db.query(query, [user_id], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });
