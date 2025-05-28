@@ -24,23 +24,35 @@ exports.getQuestionById = (req, res) => {
 
 // Create Question
 exports.createQuestion = (req, res) => {
-    const { text, section_id, sub_section_id } = req.body;
+     const { text, section_id, sub_section_id, target_type = 'self' } = req.body;
 
-    const query = 'INSERT INTO questions (text, section_id, sub_section_id) VALUES (?, ?, ?)';
-    db.query(query, [text, section_id, sub_section_id || null], (err, result) => {
+    // Validate target_type
+    const allowedTypes = ['manager_about_employee', 'self'];
+    if (!allowedTypes.includes(target_type)) {
+        return res.status(400).json({ error: 'Invalid target_type value' });
+    }
+
+    const query = 'INSERT INTO questions (text, section_id, sub_section_id, target_type) VALUES (?, ?, ?, ?)';
+    db.query(query, [text, section_id, sub_section_id || null, target_type], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        res.status(201).json({ id: result.insertId, text, section_id, sub_section_id });
+        res.status(201).json({
+            id: result.insertId,
+            text,
+            section_id,
+            sub_section_id,
+            target_type
+        });
     });
 };
 
 // Update Question
 exports.updateQuestion = (req, res) => {
     const questionId = req.params.id;
-    const { text, section_id, sub_section_id } = req.body;
+    const { text, section_id, sub_section_id, target_type } = req.body;
 
-    const query = 'UPDATE questions SET text = ?, section_id = ?, sub_section_id = ? WHERE id = ?';
-    db.query(query, [text, section_id, sub_section_id || null, questionId], (err, result) => {
+    const query = 'UPDATE questions SET text = ?, section_id = ?, sub_section_id = ?, target_type=? WHERE id = ?';
+    db.query(query, [text, section_id, sub_section_id || null,target_type, questionId], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
         if (result.affectedRows === 0) return res.status(404).json({ error: 'Question not found' });
         res.json({ message: 'Question updated successfully' });
