@@ -11,6 +11,8 @@ exports.getAllSubSections = (req, res) => {
     });
 };
 
+
+
 // Get SubSection by ID
 exports.getSubSectionById = (req, res) => {
     const subSectionId = req.params.id;
