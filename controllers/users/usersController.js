@@ -133,3 +133,18 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Database error' });
   }
 };
+
+exports.getAllUsersUnderManager = async(req,res) =>{
+  const user_id = req.params.id;
+  const organization_id = req.params.organization_id;
+
+  try{
+     const [results] = await db.promise().query(`
+      SELECT * FROM users WHERE manager_id = ? AND organization_id = ?;
+  `, [user_id, organization_id]);
+    res.json(results);
+  } catch (err) {
+    console.error('DB Query Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+}

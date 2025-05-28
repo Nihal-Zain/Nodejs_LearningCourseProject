@@ -62,7 +62,7 @@ exports.getAllUserInfo = async (req, res) => {
 exports.getUserInfoById = async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await db.promise().query(`SELECT * FROM user_info WHERE id = ?`, [id]);
+    const [rows] = await db.promise().query(`SELECT * FROM user_info WHERE user_id = ?`, [id]);
     if (rows.length === 0) return res.status(404).json({ message: 'Not found' });
     res.json(rows[0]);
   } catch (err) {
