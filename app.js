@@ -25,7 +25,7 @@ const questionsRoutes = require('./routes/questionRoutes');
 const choiceRoutes = require('./routes/choiceRoutes');
 const subSectionsRoutes = require('./routes/subSectionsRoutes');
 const organizationRoutes = require('./routes/organizationsRoutes');
-
+const managerEvaluationRoute = require('./routes/managerEvaluation.routes')
 const app = express();
 
 
@@ -67,7 +67,7 @@ app.use('/api', choiceRoutes);
 app.use('/api', popularRoutes)
 app.use('/api', organizationRoutes);
 app.use('/api', subSectionsRoutes);
-
+app.use('/api', managerEvaluationRoute)
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
