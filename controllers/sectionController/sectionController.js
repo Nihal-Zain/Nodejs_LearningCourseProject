@@ -24,9 +24,9 @@ exports.getSectionById = (req, res) => {
 
 // Create a new section
 exports.createSection = (req, res) => {
-    const { title, ismanager = 0 } = req.body;
-    const query = 'INSERT INTO sections (title, ismanager) VALUES (?, ?)';
-    db.query(query, [title, ismanager], (err, result) => {
+    const { title,for_manager_to_evaluate_employee=0, ismanager = 0 } = req.body;
+    const query = 'INSERT INTO sections (title, ismanager,for_manager_to_evaluate_employee ) VALUES (?, ?,?)';
+    db.query(query, [title, ismanager,for_manager_to_evaluate_employee], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
         res.status(201).json({ id: result.insertId, title, ismanager });
     });
