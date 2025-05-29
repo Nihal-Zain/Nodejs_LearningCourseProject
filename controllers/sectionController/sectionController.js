@@ -58,7 +58,7 @@ exports.getSubSectionResults = (req, res) => {
     const user_id = req.params.id;
 
     const query = `
-        SELECT 
+     SELECT 
     a.user_id,
     ss.id AS sub_section_id,
     ss.title AS sub_section_title,
@@ -71,6 +71,7 @@ exports.getSubSectionResults = (req, res) => {
     JOIN sections s ON ss.section_id = s.id
     JOIN choices c ON a.choice_id = c.id
     WHERE a.user_id = ?
+    AND NOT (s.ismanager = 1 AND s.for_manager_to_evaluate_employee = 1)
     GROUP BY ss.id, ss.title, s.title
     ORDER BY s.title, ss.title
     LIMIT 0, 25;
@@ -78,6 +79,127 @@ exports.getSubSectionResults = (req, res) => {
     `;
 
     db.query(query, [user_id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+};
+// Get results for each sub-section in a section for employee evaluation
+exports.getEmployeeResultsForAspecificManager = (req, res) => {
+    const user_id = req.params.id;
+
+  const query= `SELECT 
+    a.user_id,
+    ss.id AS sub_section_id,
+    ss.title AS sub_section_title,
+    s.title AS section_title,
+    COUNT(q.id) AS total_questions_answered,
+    SUM(CASE WHEN c.is_correct = 1 THEN 1 ELSE 0 END) AS correct_answers
+FROM answers a
+JOIN questions q ON a.question_id = q.id
+JOIN sub_sections ss ON q.sub_section_id = ss.id
+JOIN sections s ON ss.section_id = s.id
+JOIN choices c ON a.choice_id = c.id
+WHERE a.user_id = (
+    SELECT manager_id FROM users WHERE id = ?
+)
+AND s.ismanager = 1
+AND s.for_manager_to_evaluate_employee = 1
+GROUP BY ss.id, ss.title, s.title
+ORDER BY s.title, ss.title
+LIMIT 0, 25;
+    `;
+
+    db.query(query, [user_id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+};
+
+// Get results for each sub-section in a section for employee evaluation
+exports.getSubSectionResultsManager = (req, res) => {
+    const user_id = req.params.id;
+    const target_user_id = req.params.target_user_id; 
+
+    const query = `
+      SELECT 
+    a.user_id AS manager_id,
+    a.target_user_id AS employee_id,
+    ss.id AS sub_section_id,
+    ss.title AS sub_section_title,
+    s.title AS section_title,
+    COUNT(q.id) AS total_questions_answered,
+    SUM(CASE WHEN c.is_correct = 1 THEN 1 ELSE 0 END) AS correct_answers
+FROM answers a
+JOIN questions q ON a.question_id = q.id
+JOIN sub_sections ss ON q.sub_section_id = ss.id
+JOIN sections s ON ss.section_id = s.id
+JOIN choices c ON a.choice_id = c.id
+WHERE a.user_id = ?             
+  AND a.target_user_id = ?        
+  AND s.ismanager = 1
+  AND s.for_manager_to_evaluate_employee = 1
+GROUP BY a.user_id, a.target_user_id, ss.id, ss.title, s.title
+ORDER BY s.title, ss.title
+LIMIT 0, 25;
+
+    `;
+
+    db.query(query, [user_id,target_user_id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+};
+
+
+// Get results for each sub-section in a section for employee evaluation
+exports.finalResults = (req, res) => {
+    const user_id = req.params.id;
+
+    const query = `
+     (
+    SELECT 
+        a.user_id,
+        ss.id AS sub_section_id,
+        ss.title AS sub_section_title,
+        s.title AS section_title,
+        COUNT(q.id) AS total_questions_answered,
+        SUM(CASE WHEN c.is_correct = 1 THEN 1 ELSE 0 END) AS correct_answers
+    FROM answers a
+    JOIN questions q ON a.question_id = q.id
+    JOIN sub_sections ss ON q.sub_section_id = ss.id
+    JOIN sections s ON ss.section_id = s.id
+    JOIN choices c ON a.choice_id = c.id
+    WHERE a.user_id = ?
+      AND NOT (s.ismanager = 1 AND s.for_manager_to_evaluate_employee = 1)
+    GROUP BY ss.id, ss.title, s.title
+)
+UNION ALL
+(
+    SELECT 
+        a.user_id,
+        ss.id AS sub_section_id,
+        ss.title AS sub_section_title,
+        s.title AS section_title,
+        COUNT(q.id) AS total_questions_answered,
+        SUM(CASE WHEN c.is_correct = 1 THEN 1 ELSE 0 END) AS correct_answers
+    FROM answers a
+    JOIN questions q ON a.question_id = q.id
+    JOIN sub_sections ss ON q.sub_section_id = ss.id
+    JOIN sections s ON ss.section_id = s.id
+    JOIN choices c ON a.choice_id = c.id
+    WHERE a.user_id = (
+        SELECT manager_id FROM users WHERE id = ?
+    )
+    AND s.ismanager = 1
+    AND s.for_manager_to_evaluate_employee = 1
+    GROUP BY ss.id, ss.title, s.title
+)
+ORDER BY section_title, sub_section_title
+LIMIT 0, 25;
+
+    `;
+
+    db.query(query, [user_id,user_id], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });

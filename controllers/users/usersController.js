@@ -17,7 +17,10 @@ exports.login = async (req, res) => {
         users.email,
         users.role_id,
         role.name AS role_name,
-        users.organization_id
+        users.organization_id,
+        users.assessment_completed,
+        users.managerAssessment_completed,
+        users.tips
       FROM users 
       INNER JOIN role ON users.role_id = role.id
       WHERE users.id = ? AND users.password = ?`,
@@ -107,12 +110,27 @@ exports.createUser = async (req, res) => {
 // UPDATE a user by ID
 exports.updateUser = async (req, res) => {
   const userId = req.params.id;
-  const {first_name, last_name, email, password } = req.body;
+  const fields = ['first_name', 'last_name', 'email', 'password', 'assessment_completed', 'managerAssessment_completed', 'tips'];
+  const updates = [];
+  const values = [];
+
+  fields.forEach(field => {
+    if (req.body[field] !== undefined) {
+      updates.push(`${field} = ?`);
+      values.push(req.body[field]);
+    }
+  });
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'No fields to update' });
+  }
+
+  values.push(userId);
 
   try {
     await db.promise().query(
-      `UPDATE users SET first_name = ?, last_name = ?, email = ?, password = ? WHERE id = ?`,
-      [first_name, last_name, email, password, userId]
+      `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+      values
     );
     res.json({ message: 'User updated' });
   } catch (err) {

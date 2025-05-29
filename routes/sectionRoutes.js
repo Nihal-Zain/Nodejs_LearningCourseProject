@@ -10,6 +10,9 @@ router.put('/sections/:id',sectionController.updateSection);
 router.delete('/sections/:id', sectionController.deleteSection);
 router.get('/sections/:id/results', sectionController.getSectionResults);
 router.get('/sections/:id/subsection-results', sectionController.getSubSectionResults);
+router.get('/sections/:id/:target_user_id/manager/subsection-results', sectionController.getSubSectionResultsManager);
+router.get('/sections/:id/manager/subsection-results', sectionController.getEmployeeResultsForAspecificManager);
+router.get('/sections/finalResults/:id', sectionController.finalResults);
 router.get('sections/:id/question-results', sectionController.getQuestionResults);
 
 
