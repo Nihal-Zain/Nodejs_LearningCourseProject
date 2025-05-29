@@ -55,8 +55,9 @@ exports.getCourseById = async (req, res) => {
 };
 
 // Add new course
+
 exports.addCourse = async (req, res) => {
-  const {
+  let {
     code,
     title,
     short_description,
@@ -70,14 +71,22 @@ exports.addCourse = async (req, res) => {
     level,
     status,
     course_type,
-    city
+    city,
+    faqs,
+    outcomes,
+    requirements,
   } = req.body;
 
   try {
+    // Ensure any objects are stringified
+    faqs = typeof faqs === 'object' ? JSON.stringify(faqs) : faqs;
+    outcomes = typeof outcomes === 'object' ? JSON.stringify(outcomes) : outcomes;
+    requirements = typeof requirements === 'object' ? JSON.stringify(requirements) : requirements;
+
     const [result] = await db.promise().query(
       `INSERT INTO course 
-       (code, title, short_description, description, language, category_id,category ,sub_category_id,sub_category,price, level, status, course_type, city) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)`,
+       (code, title, short_description, description, language, category_id, category, sub_category_id, sub_category, price, level, status, course_type, city, faqs, outcomes, requirements) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         code,
         title,
@@ -92,7 +101,10 @@ exports.addCourse = async (req, res) => {
         level,
         status,
         course_type,
-        city
+        city,
+        faqs,
+        outcomes,
+        requirements,
       ]
     );
     res.status(201).json({ message: 'Course added successfully', courseId: result.insertId });
@@ -102,11 +114,12 @@ exports.addCourse = async (req, res) => {
   }
 };
 
+
 // Update course by ID
 
 exports.updateCourse = async (req, res) => {
   const courseId = req.params.id;
-  const {
+  let {
     code,
     title,
     short_description,
@@ -120,13 +133,21 @@ exports.updateCourse = async (req, res) => {
     level,
     status,
     course_type,
-    city
+    city,
+    faqs,
+    outcomes,
+    requirements,
   } = req.body;
 
   try {
+    // Convert objects to JSON strings if needed
+    faqs = typeof faqs === 'object' ? JSON.stringify(faqs) : faqs;
+    outcomes = typeof outcomes === 'object' ? JSON.stringify(outcomes) : outcomes;
+    requirements = typeof requirements === 'object' ? JSON.stringify(requirements) : requirements;
+
     const [result] = await db.promise().query(
       `UPDATE course SET 
-       code = ?, title = ?, short_description = ?, description = ?, language = ?, category=?,category_id = ?, sub_category_id = ?, sub_category=?, price = ?, level = ?, status = ?, course_type = ?, city = ?
+       code = ?, title = ?, short_description = ?, description = ?, language = ?, category = ?, category_id = ?, sub_category_id = ?, sub_category = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?, faqs = ?, outcomes = ?, requirements = ?
        WHERE id = ?`,
       [
         code,
@@ -142,8 +163,11 @@ exports.updateCourse = async (req, res) => {
         level,
         status,
         course_type,
-        city,      // city before courseId
-        courseId   // courseId last, for WHERE id=?
+        city,
+        faqs,
+        outcomes,
+        requirements,
+        courseId 
       ]
     );
 
@@ -157,6 +181,7 @@ exports.updateCourse = async (req, res) => {
     res.status(500).json({ error: 'Database error' });
   }
 };
+
 
 
 // Delete course by ID
