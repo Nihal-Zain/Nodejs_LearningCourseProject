@@ -166,3 +166,40 @@ exports.getAllUsersUnderManager = async(req,res) =>{
     res.status(500).json({ error: 'Database error' });
   }
 }
+
+// SAVE user tips
+// In your usersController.js or wherever you handle saving tips:
+exports.saveUserTips = async (req, res) => {
+  const userId = req.params.id;
+  const { tips } = req.body;
+
+  if (typeof tips !== 'string' || tips.trim() === '') {
+    return res.status(400).json({ error: 'Tips must be a non-empty string' });
+  }
+
+  try {
+    // Assuming you use a SQL query to update user tips:
+    await db.promise().query('UPDATE users SET tips = ? WHERE id = ?', [tips, userId]);
+    return res.json({ message: 'Tips saved successfully' });
+  } catch (error) {
+    console.error('Error saving tips:', error);
+    return res.status(500).json({ error: 'Failed to save tips' });
+  }
+};
+
+// Get tips for a user by user ID
+exports.getTips = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const [rows] = await db.promise().query('SELECT tips FROM users WHERE id = ?', [userId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    return res.json({ tips: rows[0].tips || '' });  // Return empty string if null
+  } catch (error) {
+    console.error('Error fetching tips:', error);
+    return res.status(500).json({ error: 'Failed to get tips' });
+  }
+};
+
