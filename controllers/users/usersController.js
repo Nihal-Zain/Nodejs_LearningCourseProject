@@ -43,7 +43,6 @@ exports.login = async (req, res) => {
   }
 };
 
-
 // get all users
 exports.getUsers = async (req, res) => {
   try {
@@ -64,7 +63,6 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ error: 'Database error' });
   }
 };
-
 
 exports.getAllManagerOfUsers = async (req, res) => {
   const { orgId, role } = req.query;
@@ -93,13 +91,37 @@ exports.getAllManagerOfUsers = async (req, res) => {
 
 // CREATE a new user
 exports.createUser = async (req, res) => {
-  const { first_name, last_name, email, role_id ,password, is_instructor, verification_code, manager_id, organization_id} = req.body;
+  const {
+    first_name,
+    last_name,
+    email,
+    role_id,
+    password,
+    is_instructor,
+    verification_code,
+    manager_id,
+    organization_id,
+  } = req.body;
 
   try {
-    const [result] = await db.promise().query(
-      `INSERT INTO users (first_name, last_name, email, role_id, is_instructor, password, date_added, verification_code, manager_id, organization_id) VALUES (?, ?, ?, ?,?, ?, NOW(),?,?,?)`,
-      [first_name, last_name, email, role_id, is_instructor,password, verification_code, manager_id, organization_id]
-    );
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const [result] = await db
+      .promise()
+      .query(
+        `INSERT INTO users (first_name, last_name, email, role_id, is_instructor, password, date_added, verification_code, manager_id, organization_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          first_name,
+          last_name,
+          email,
+          role_id,
+          is_instructor,
+          password,
+          currentTimestamp,
+          verification_code,
+          manager_id,
+          organization_id,
+        ]
+      );
     res.status(201).json({ message: 'User created', userId: result.insertId });
   } catch (err) {
     console.error('Create User Error:', err);
@@ -110,11 +132,19 @@ exports.createUser = async (req, res) => {
 // UPDATE a user by ID
 exports.updateUser = async (req, res) => {
   const userId = req.params.id;
-  const fields = ['first_name', 'last_name', 'email', 'password', 'assessment_completed', 'managerAssessment_completed', 'tips'];
+  const fields = [
+    'first_name',
+    'last_name',
+    'email',
+    'password',
+    'assessment_completed',
+    'managerAssessment_completed',
+    'tips',
+  ];
   const updates = [];
   const values = [];
 
-  fields.forEach(field => {
+  fields.forEach((field) => {
     if (req.body[field] !== undefined) {
       updates.push(`${field} = ?`);
       values.push(req.body[field]);
@@ -128,10 +158,9 @@ exports.updateUser = async (req, res) => {
   values.push(userId);
 
   try {
-    await db.promise().query(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
+    await db
+      .promise()
+      .query(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
     res.json({ message: 'User updated' });
   } catch (err) {
     console.error('Update User Error:', err);
@@ -152,20 +181,23 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-exports.getAllUsersUnderManager = async(req,res) =>{
+exports.getAllUsersUnderManager = async (req, res) => {
   const user_id = req.params.id;
   const organization_id = req.params.organization_id;
 
-  try{
-     const [results] = await db.promise().query(`
+  try {
+    const [results] = await db.promise().query(
+      `
       SELECT * FROM users WHERE manager_id = ? AND organization_id = ?;
-  `, [user_id, organization_id]);
+  `,
+      [user_id, organization_id]
+    );
     res.json(results);
   } catch (err) {
     console.error('DB Query Error:', err);
     res.status(500).json({ error: 'Database error' });
   }
-}
+};
 
 // SAVE user tips
 // In your usersController.js or wherever you handle saving tips:
@@ -179,7 +211,9 @@ exports.saveUserTips = async (req, res) => {
 
   try {
     // Assuming you use a SQL query to update user tips:
-    await db.promise().query('UPDATE users SET tips = ? WHERE id = ?', [tips, userId]);
+    await db
+      .promise()
+      .query('UPDATE users SET tips = ? WHERE id = ?', [tips, userId]);
     return res.json({ message: 'Tips saved successfully' });
   } catch (error) {
     console.error('Error saving tips:', error);
@@ -192,14 +226,15 @@ exports.getTips = async (req, res) => {
   const userId = req.params.id;
 
   try {
-    const [rows] = await db.promise().query('SELECT tips FROM users WHERE id = ?', [userId]);
+    const [rows] = await db
+      .promise()
+      .query('SELECT tips FROM users WHERE id = ?', [userId]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    return res.json({ tips: rows[0].tips || '' });  // Return empty string if null
+    return res.json({ tips: rows[0].tips || '' }); // Return empty string if null
   } catch (error) {
     console.error('Error fetching tips:', error);
     return res.status(500).json({ error: 'Failed to get tips' });
   }
 };
-
