@@ -10,6 +10,8 @@ exports.getCourses = async (req, res) => {
       city,
       level,
       search,
+      faqs,
+      competencies,
       page = 1,
       limit = 25,
     } = req.query;
@@ -35,10 +37,10 @@ exports.getCourses = async (req, res) => {
       params.push(sub_category.trim());
     }
 
-    // City/Location filter
+    // City/Location filter (supports comma-separated values in database)
     if (city && city.trim() !== '') {
-      conditions.push('city = ?');
-      params.push(city.trim());
+      conditions.push('city LIKE ?');
+      params.push(`%${city.trim()}%`);
     }
 
     // Level filter
@@ -58,6 +60,41 @@ exports.getCourses = async (req, res) => {
       conditions.push('(title LIKE ? OR city LIKE ? OR category LIKE ?)');
       const searchTerm = `%${search.trim()}%`;
       params.push(searchTerm, searchTerm, searchTerm);
+    }
+
+    // FAQs/Competencies filter
+    const competenciesFilter = competencies || faqs; // Support both parameter names
+    if (competenciesFilter) {
+      let competenciesArray;
+
+      // Handle different input formats
+      if (typeof competenciesFilter === 'string') {
+        try {
+          // Parse JSON string and decode URL-encoded characters
+          competenciesArray = JSON.parse(
+            decodeURIComponent(competenciesFilter)
+          );
+        } catch {
+          // If JSON parsing fails, treat as comma-separated string
+          competenciesArray = competenciesFilter
+            .split(',')
+            .map((c) => c.trim());
+        }
+      } else if (Array.isArray(competenciesFilter)) {
+        competenciesArray = competenciesFilter;
+      }
+
+      if (competenciesArray && competenciesArray.length > 0) {
+        const faqConditions = competenciesArray
+          .map(() => 'JSON_EXTRACT(faqs, CONCAT("$.", ?)) IS NOT NULL')
+          .join(' OR ');
+        conditions.push(`(${faqConditions})`);
+        competenciesArray.forEach((competency) => {
+          // Clean up the competency name (remove + signs and extra spaces)
+          const cleanCompetency = competency.replace(/\+/g, ' ').trim();
+          params.push(cleanCompetency);
+        });
+      }
     }
 
     // Build the WHERE clause
@@ -102,6 +139,7 @@ exports.getCourses = async (req, res) => {
         city,
         level,
         search,
+        faqs,
       },
     });
   } catch (err) {
@@ -307,6 +345,38 @@ exports.deleteCourse = async (req, res) => {
     res.json({ message: 'Course deleted successfully' });
   } catch (err) {
     console.error('DB Delete Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
+
+// Get unique competencies from all courses' FAQs
+exports.getCompetencies = async (req, res) => {
+  try {
+    // Get all courses with FAQs
+    const [courses] = await db
+      .promise()
+      .query('SELECT faqs FROM course WHERE faqs IS NOT NULL AND faqs != ""');
+
+    // Extract competencies from FAQs
+    const competencies = Array.from(
+      new Set(
+        courses.flatMap((course) => {
+          try {
+            const faqsObj =
+              typeof course.faqs === 'string'
+                ? JSON.parse(course.faqs)
+                : course.faqs;
+            return faqsObj ? Object.keys(faqsObj) : [];
+          } catch {
+            return [];
+          }
+        })
+      )
+    );
+
+    res.json(competencies);
+  } catch (err) {
+    console.error('DB Query Error:', err);
     res.status(500).json({ error: 'Database error' });
   }
 };
