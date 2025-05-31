@@ -12,6 +12,8 @@ exports.getCourses = async (req, res) => {
       search,
       faqs,
       competencies,
+      minPrice,
+      maxPrice,
       page = 1,
       limit = 25,
     } = req.query;
@@ -97,6 +99,17 @@ exports.getCourses = async (req, res) => {
       }
     }
 
+    // Price filter
+    if (minPrice && !isNaN(parseFloat(minPrice))) {
+      conditions.push('price >= ?');
+      params.push(parseFloat(minPrice));
+    }
+
+    if (maxPrice && !isNaN(parseFloat(maxPrice))) {
+      conditions.push('price <= ?');
+      params.push(parseFloat(maxPrice));
+    }
+
     // Build the WHERE clause
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -140,6 +153,8 @@ exports.getCourses = async (req, res) => {
         level,
         search,
         faqs,
+        minPrice,
+        maxPrice,
       },
     });
   } catch (err) {
