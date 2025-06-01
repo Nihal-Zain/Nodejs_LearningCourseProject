@@ -1,7 +1,9 @@
-// app.js
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const app = express();
+
+// Route Imports
 const categoryRoutes = require('./routes/category');
 const courseRoutes = require('./routes/course');
 const couponsRoutes = require('./routes/coupons');
@@ -25,16 +27,19 @@ const questionsRoutes = require('./routes/questionRoutes');
 const choiceRoutes = require('./routes/choiceRoutes');
 const subSectionsRoutes = require('./routes/subSectionsRoutes');
 const organizationRoutes = require('./routes/organizationsRoutes');
-const managerEvaluationRoute = require('./routes/managerEvaluation.routes')
-const answersRouter = require('./routes/answerRouter')
-const app = express();
+const managerEvaluationRoute = require('./routes/managerEvaluation.routes');
+const answersRouter = require('./routes/answerRouter');
 
+// CORS Configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://europetrainingcenter.conferencai.com'
+];
 
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173', "https://europetrainingcenter.conferencai.com"];
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // allow curl, mobile, etc.
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
@@ -42,9 +47,15 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json());app.use('/api', blogsRouter); 
+
+// Middleware
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
+app.use('/api', blogsRouter); 
+app.use('/api', clientsRoutes);
+app.use('/api', organizationRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', courseRoutes);
 app.use('/api', questionRoutes);
@@ -60,17 +71,13 @@ app.use('/api', usersInfoRouter);
 app.use('/api', couponsRoutes);
 app.use('/api', instructorRoutes);
 app.use('/api', contactRoutes);
-app.use('/api', clientsRoutes);
 app.use('/api', popularRoutes);
 app.use('/api', sectionRoutes);
 app.use('/api', questionsRoutes);
 app.use('/api', choiceRoutes);
-app.use('/api', popularRoutes)
-app.use('/api', organizationRoutes);
 app.use('/api', subSectionsRoutes);
-app.use('/api', managerEvaluationRoute)
-app.use('/api',answersRouter)
+app.use('/api', managerEvaluationRoute);
+app.use('/api', answersRouter);
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-module.exports = app; // Export app for server.js
+// Export for use in server.js
+module.exports = app;

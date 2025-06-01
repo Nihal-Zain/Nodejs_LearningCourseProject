@@ -1,24 +1,24 @@
-const db = require('../../config/db');
-const path = require('path');
-require('dotenv').config();
+// controllers/organizations/organizationController.js
+const db = require("../../config/db");
+require("dotenv").config();
 
 // Get all organizations
 exports.getAllOrganizations = async (req, res) => {
   try {
-    const [results] = await db.query('SELECT * FROM organizations');
+    const [results] = await db.query("SELECT * FROM organizations");
     res.json(results);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Add a new organization with uploaded image
+// Create new organization
 exports.createOrganization = async (req, res) => {
   try {
     const { title } = req.body;
-    const PORT = process.env.PORT || 5000;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     const logo_image = req.file
-      ? `http://localhost:${PORT}/uploads/${req.file.filename}`
+      ? `${baseUrl}/uploads/${req.file.filename}`
       : null;
 
     const [result] = await db.query(
@@ -32,17 +32,21 @@ exports.createOrganization = async (req, res) => {
   }
 };
 
+
 // Get organization by ID
-exports.getOrganizationById = (req, res) => {
+exports.getOrganizationById = async (req, res) => {
   try {
     const { id } = req.params;
-    const sql = 'SELECT * FROM organizations WHERE id = ?';
-    db.query(sql, [id], (err, results) => {
-      if (err) return res.status(500).json({ error: err });
-      if (results.length === 0)
-        return res.status(404).json({ message: 'Organization not found' });
-      res.json(results[0]);
-    });
+    const [results] = await db.query(
+      "SELECT * FROM organizations WHERE id = ?",
+      [id]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    res.json(results[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -54,21 +58,28 @@ exports.updateOrganization = async (req, res) => {
     const { id } = req.params;
     const { title } = req.body;
 
-    // Get existing logo image first
-    const [results] = await db.query('SELECT logo_image FROM organizations WHERE id = ?', [id]);
+    // Get current organization
+    const [results] = await db.query(
+      "SELECT logo_image FROM organizations WHERE id = ?",
+      [id]
+    );
+
     if (results.length === 0) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
     const existingLogo = results[0].logo_image;
-    const PORT = process.env.PORT || 5000;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     const newLogo = req.file
-      ? `http://localhost:${PORT}/uploads/${req.file.filename}`
+      ? `${baseUrl}/uploads/${req.file.filename}`
       : existingLogo;
 
-    await db.query('UPDATE organizations SET title = ?, logo_image = ? WHERE id = ?', [title, newLogo, id]);
+    await db.query(
+      "UPDATE organizations SET title = ?, logo_image = ? WHERE id = ?",
+      [title, newLogo, id]
+    );
 
-    res.json({ message: 'Organization updated successfully' });
+    res.json({ message: "Organization updated successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -78,13 +89,15 @@ exports.updateOrganization = async (req, res) => {
 exports.deleteOrganization = async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await db.query('DELETE FROM organizations WHERE id = ?', [id]);
+    const [result] = await db.query("DELETE FROM organizations WHERE id = ?", [
+      id,
+    ]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Organization not found' });
+      return res.status(404).json({ message: "Organization not found" });
     }
 
-    res.json({ message: 'Organization deleted successfully' });
+    res.json({ message: "Organization deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

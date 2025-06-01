@@ -1,35 +1,47 @@
-const e = require('express');
 const db = require('../../config/db');
-const path = require('path');
 
+// Helper to generate full URL
 const getFullImageUrl = (req, filename) => {
   return `${req.protocol}://${req.get('host')}/uploads/${filename}`;
 };
 
+// Get all clients
 exports.getAllClients = async (req, res) => {
-  const query = 'SELECT * FROM clients ORDER BY id DESC';
   try {
-    const [results] = await db.query(query);
-    res.json(results);
+    const [results] = await db.query('SELECT * FROM clients ORDER BY id DESC');
+    const updatedResults = results.map(client => {
+      if (client.img_url) {
+        client.img_url = getFullImageUrl(req, client.img_url);
+      }
+      return client;
+    });
+    res.json(updatedResults);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+// Get client by ID
 exports.getClientById = async (req, res) => {
   const clientId = req.params.id;
-  const query = 'SELECT * FROM clients WHERE id = ?';
   try {
-    const [results] = await db.query(query, [clientId]);
+    const [results] = await db.query('SELECT * FROM clients WHERE id = ?', [clientId]);
     if (results.length === 0) {
       return res.status(404).json({ error: 'Client not found' });
     }
-    res.json(results[0]);
+
+    const client = results[0];
+    if (client.img_url) {
+      client.img_url = getFullImageUrl(req, client.img_url);
+    }
+
+    res.json(client);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+// Create new client with single image
 exports.createClient = async (req, res) => {
   const { name, website } = req.body;
 
@@ -37,32 +49,37 @@ exports.createClient = async (req, res) => {
     return res.status(400).json({ error: 'Image is required' });
   }
 
-  const img_url = getFullImageUrl(req, req.file.filename);
-  const query = 'INSERT INTO clients (name, img_url, website) VALUES (?, ?, ?)';
+  const imageFilename = req.file.filename;
 
   try {
-    const [result] = await db.query(query, [name, img_url, website]);
-    res.status(201).json({ id: result.insertId, name, img_url, website });
+    const [result] = await db.query(
+      'INSERT INTO clients (name, img_url, website) VALUES (?, ?, ?)',
+      [name, imageFilename, website]
+    );
+
+    res.status(201).json({
+      id: result.insertId,
+      name,
+      website,
+      img_url: getFullImageUrl(req, imageFilename)
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+// Update client (with optional image update)
 exports.updateClient = async (req, res) => {
   const clientId = req.params.id;
   const { name, website } = req.body;
-
-  let img_url = null;
-  if (req.file) {
-    img_url = getFullImageUrl(req, req.file.filename);
-  }
+  const imageFilename = req.file?.filename;
 
   let query = 'UPDATE clients SET name = ?, website = ?';
   let params = [name, website];
 
-  if (img_url) {
+  if (imageFilename) {
     query += ', img_url = ?';
-    params.push(img_url);
+    params.push(imageFilename);
   }
 
   query += ' WHERE id = ?';
@@ -73,18 +90,23 @@ exports.updateClient = async (req, res) => {
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Client not found' });
     }
-    res.json({ id: clientId, name, website, img_url });
+
+    res.json({
+      id: clientId,
+      name,
+      website,
+      img_url: imageFilename ? getFullImageUrl(req, imageFilename) : undefined
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+// Delete client
 exports.deleteClient = async (req, res) => {
   const clientId = req.params.id;
-  const query = 'DELETE FROM clients WHERE id = ?';
-
   try {
-    const [result] = await db.query(query, [clientId]);
+    const [result] = await db.query('DELETE FROM clients WHERE id = ?', [clientId]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Client not found' });
     }
