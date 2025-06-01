@@ -26,25 +26,12 @@ exports.getAllInstructors = async (req, res) => {
 // Add a new instructor
 exports.addInstructor = async (req, res) => {
   const { name, short_description } = req.body;
+  const img = req.file ? req.file.path : null; // Cloudinary returns a full URL
 
-  if (!req.file) {
-    return res.status(400).json({ error: 'Image is required' });
-  }
-
-  const imageFilename = req.file.filename;
-
+  const sql = 'INSERT INTO instructors (name, img, short_description) VALUES (?, ?, ?)';
   try {
-    const [result] = await db.query(
-      'INSERT INTO instructors (name, img, short_description) VALUES (?, ?, ?)',
-      [name, imageFilename, short_description]
-    );
-
-    res.status(201).json({
-      id: result.insertId,
-      name,
-      img: getFullImageUrl(req, imageFilename),
-      short_description
-    });
+    const [result] = await db.query(sql, [name, img, short_description]);
+    res.status(201).json({ id: result.insertId, name, img, short_description });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
