@@ -2,7 +2,7 @@ const db = require('../../config/db');
 
 exports.getCoupons = async (req, res) => {
   try {
-    const [results] = await db.promise().query('SELECT * FROM coupons');
+    const [results] = await db.query('SELECT * FROM coupons');
     res.json(results);
   } catch (err) {
     console.error('DB Query Error:', err);
@@ -15,7 +15,7 @@ exports.addCoupon = async (req, res) => {
   const { code, discount_percentage, created_at ,expiry_date } = req.body;
 
   try {
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       'INSERT INTO coupons (code, discount_percentage, created_at ,expiry_date) VALUES (?, ?, ?,?)',
       [code, discount_percentage, created_at ,expiry_date]
     );
@@ -31,7 +31,7 @@ exports.deleteCoupon = async (req, res) => {
   const couponId = req.params.id;
 
   try {
-    const [result] = await db.promise().query('DELETE FROM coupons WHERE id = ?', [couponId]);
+    const [result] = await db.query('DELETE FROM coupons WHERE id = ?', [couponId]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Coupon not found' });
     }

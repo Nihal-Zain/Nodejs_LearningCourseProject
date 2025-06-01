@@ -15,7 +15,7 @@ function addFullImageUrls(blog, req) {
 // Function to get all blogs
 exports.getBlogs = async (req, res) => {
   try {
-    const [results] = await db.promise().query(`SELECT 
+    const [results] = await db.query(`SELECT 
   blogs.*, 
   users.first_name AS author_firstName,
   users.last_name AS authorLastName,
@@ -38,7 +38,7 @@ exports.getBlogs = async (req, res) => {
 exports.getBlogById = async (req, res) => {
   const blogId = req.params.id;
   try {
-    const [results] = await db.promise().query(`SELECT 
+    const [results] = await db.query(`SELECT 
   blogs.*,
   users.first_name AS author_firstName,
   users.last_name AS author_lastName,
@@ -71,7 +71,7 @@ exports.createBlog = async (req, res) => {
     const bannerPath = req.files.banner?.[0]?.filename || null;
 
   try {
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       `INSERT INTO blogs (blog_category_id, user_id, title, keywords, description, thumbnail, banner, is_popular, likes, added_date, updated_date, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)`,
       [1, 1, title, keywords, description, thumbnailPath, bannerPath, false, 0, 1]
@@ -85,7 +85,7 @@ exports.createBlog = async (req, res) => {
 exports.deleteBlog = async (req, res) => {
   const blogId = req.params.id;
   try {
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       'DELETE FROM blogs WHERE blog_id = ?',
       [blogId]
     );

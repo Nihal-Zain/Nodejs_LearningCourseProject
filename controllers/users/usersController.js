@@ -9,7 +9,7 @@ exports.login = async (req, res) => {
   }
 
   try {
-    const [rows] = await db.promise().query(
+    const [rows] = await db.query(
       `SELECT 
         users.id AS user_id,
         users.first_name,
@@ -46,7 +46,7 @@ exports.login = async (req, res) => {
 // get all users
 exports.getUsers = async (req, res) => {
   try {
-    const [results] = await db.promise().query(`SELECT 
+    const [results] = await db.query(`SELECT 
   users.*, 
   role.name AS position,
   org.title AS organization_name,
@@ -83,10 +83,12 @@ exports.getAllManagerOfUsers = async (req, res) => {
     FROM users 
     WHERE organization_id = ? AND role_id IN (?)`;
 
-  db.query(sql, [orgId, targetRoles], (err, result) => {
-    if (err) return res.status(500).json({ error: err });
+  try {
+    const [result] = await db.query(sql, [orgId, targetRoles]);
     res.json(result);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err });
+  }
 };
 
 // CREATE a new user
@@ -158,9 +160,10 @@ exports.updateUser = async (req, res) => {
   values.push(userId);
 
   try {
-    await db
-      .promise()
-      .query(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
+    await db.query(
+      `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
     res.json({ message: 'User updated' });
   } catch (err) {
     console.error('Update User Error:', err);
@@ -173,7 +176,7 @@ exports.deleteUser = async (req, res) => {
   const userId = req.params.id;
 
   try {
-    await db.promise().query(`DELETE FROM users WHERE id = ?`, [userId]);
+    await db.query(`DELETE FROM users WHERE id = ?`, [userId]);
     res.json({ message: 'User deleted' });
   } catch (err) {
     console.error('Delete User Error:', err);
@@ -185,9 +188,8 @@ exports.getAllUsersUnderManager = async (req, res) => {
   const user_id = req.params.id;
   const organization_id = req.params.organization_id;
 
-  try {
-    const [results] = await db.promise().query(
-      `
+  try{
+     const [results] = await db.query(`
       SELECT * FROM users WHERE manager_id = ? AND organization_id = ?;
   `,
       [user_id, organization_id]
@@ -211,9 +213,7 @@ exports.saveUserTips = async (req, res) => {
 
   try {
     // Assuming you use a SQL query to update user tips:
-    await db
-      .promise()
-      .query('UPDATE users SET tips = ? WHERE id = ?', [tips, userId]);
+    await db.query('UPDATE users SET tips = ? WHERE id = ?', [tips, userId]);
     return res.json({ message: 'Tips saved successfully' });
   } catch (error) {
     console.error('Error saving tips:', error);
@@ -226,9 +226,7 @@ exports.getTips = async (req, res) => {
   const userId = req.params.id;
 
   try {
-    const [rows] = await db
-      .promise()
-      .query('SELECT tips FROM users WHERE id = ?', [userId]);
+    const [rows] = await db.query('SELECT tips FROM users WHERE id = ?', [userId]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }

@@ -15,7 +15,7 @@ exports.createUserInfo = async (req, res) => {
   } = req.body;
 
   try {
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       `INSERT INTO user_info (
       user_id,  
       full_name, 
@@ -50,7 +50,7 @@ exports.createUserInfo = async (req, res) => {
 // Read all user_info
 exports.getAllUserInfo = async (req, res) => {
   try {
-    const [rows] = await db.promise().query(`SELECT * FROM user_info`);
+    const [rows] = await db.query(`SELECT * FROM user_info`);
     res.json(rows);
   } catch (err) {
     console.error('Error fetching user info:', err);
@@ -62,7 +62,7 @@ exports.getAllUserInfo = async (req, res) => {
 exports.getUserInfoById = async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await db.promise().query(`SELECT * FROM user_info WHERE user_id = ?`, [id]);
+    const [rows] = await db.query(`SELECT * FROM user_info WHERE user_id = ?`, [id]);
     if (rows.length === 0) return res.status(404).json({ message: 'Not found' });
     res.json(rows[0]);
   } catch (err) {
@@ -77,7 +77,7 @@ exports.updateUserInfo = async (req, res) => {
 
   try {
     // 1. Get current user_info
-    const [rows] = await db.promise().query(`SELECT * FROM user_info WHERE id = ?`, [id]);
+    const [rows] = await db.query(`SELECT * FROM user_info WHERE id = ?`, [id]);
     if (rows.length === 0) return res.status(404).json({ message: 'User info not found' });
 
     const existing = rows[0];
@@ -96,7 +96,7 @@ exports.updateUserInfo = async (req, res) => {
     } = req.body;
 
     // 3. Update only the changed/new values
-    await db.promise().query(
+    await db.query(
       `UPDATE user_info SET 
         user_id = ?,
         full_name = ?, 
@@ -135,7 +135,7 @@ exports.deleteUserInfo = async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.promise().query(`DELETE FROM user_info WHERE id = ?`, [id]);
+    await db.query(`DELETE FROM user_info WHERE id = ?`, [id]);
     res.json({ message: 'User info deleted' });
   } catch (err) {
     console.error('Error deleting user info:', err);

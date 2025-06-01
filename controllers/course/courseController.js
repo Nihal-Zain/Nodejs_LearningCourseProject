@@ -116,7 +116,7 @@ exports.getCourses = async (req, res) => {
 
     // Get total count for pagination
     const countQuery = `SELECT COUNT(*) as total FROM course ${whereClause}`;
-    const [countResult] = await db.promise().query(countQuery, params);
+    const [countResult] = await db.query(countQuery, params);
     const totalCourses = countResult[0].total;
 
     // Get courses with pagination
@@ -127,7 +127,6 @@ exports.getCourses = async (req, res) => {
     `;
 
     const [results] = await db
-      .promise()
       .query(coursesQuery, [...params, limitNum, offset]);
 
     // Calculate pagination info
@@ -166,11 +165,13 @@ exports.getCourses = async (req, res) => {
 // Get distinct sub-categories for a category
 exports.getSubCategories = async (req, res) => {
   try {
-    const [results] = await db
-      .promise()
-      .query('SELECT DISTINCT sub_category FROM course WHERE category = ?', [
-        req.params.category,
-      ]);
+    const category = req.params.category;
+    if (!category) return res.status(400).json({ error: 'Category is required' });
+
+    const [results] = await db.query(
+      'SELECT DISTINCT sub_category FROM course WHERE category = ?',
+      [category]
+    );
     res.json(results);
   } catch (err) {
     console.error('DB Query Error:', err);
@@ -178,12 +179,10 @@ exports.getSubCategories = async (req, res) => {
   }
 };
 
-// Get distinct sub-categories for a category
+// Get all unique main categories
 exports.getAllUniqueMainCategories = async (req, res) => {
   try {
-    const [results] = await db
-      .promise()
-      .query('SELECT DISTINCT category FROM `course`');
+    const [results] = await db.query('SELECT DISTINCT category FROM course');
     res.json(results);
   } catch (err) {
     console.error('DB Query Error:', err);
@@ -194,9 +193,11 @@ exports.getAllUniqueMainCategories = async (req, res) => {
 // Get course by ID
 exports.getCourseById = async (req, res) => {
   try {
-    const [results] = await db
-      .promise()
-      .query('SELECT * FROM course WHERE id = ?', [req.params.id]);
+    const courseId = req.params.id;
+    if (!courseId) return res.status(400).json({ error: 'Course ID is required' });
+
+    const [results] = await db.query('SELECT * FROM course WHERE id = ?', [courseId]);
+
     if (results.length === 0) {
       return res.status(404).json({ error: 'Course not found' });
     }
@@ -208,30 +209,29 @@ exports.getCourseById = async (req, res) => {
 };
 
 // Add new course
-
 exports.addCourse = async (req, res) => {
-  let {
-    code,
-    title,
-    short_description,
-    description,
-    language,
-    category_id,
-    category,
-    sub_category_id,
-    sub_category,
-    price,
-    level,
-    status,
-    course_type,
-    city,
-    faqs,
-    outcomes,
-    requirements,
-  } = req.body;
-
   try {
-    // Ensure any objects are stringified
+    let {
+      code,
+      title,
+      short_description,
+      description,
+      language,
+      category_id,
+      category,
+      sub_category_id,
+      sub_category,
+      price,
+      level,
+      status,
+      course_type,
+      city,
+      faqs,
+      outcomes,
+      requirements,
+    } = req.body;
+
+    // Convert to JSON strings if they are objects
     faqs = typeof faqs === 'object' ? JSON.stringify(faqs) : faqs;
     outcomes =
       typeof outcomes === 'object' ? JSON.stringify(outcomes) : outcomes;
@@ -240,7 +240,7 @@ exports.addCourse = async (req, res) => {
         ? JSON.stringify(requirements)
         : requirements;
 
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       `INSERT INTO course 
        (code, title, short_description, description, language, category_id, category, sub_category_id, sub_category, price, level, status, course_type, city, faqs, outcomes, requirements) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -264,10 +264,8 @@ exports.addCourse = async (req, res) => {
         requirements,
       ]
     );
-    res.status(201).json({
-      message: 'Course added successfully',
-      courseId: result.insertId,
-    });
+
+    res.status(201).json({ message: 'Course added successfully', courseId: result.insertId });
   } catch (err) {
     console.error('DB Insert Error:', err);
     res.status(500).json({ error: 'Database error' });
@@ -275,31 +273,31 @@ exports.addCourse = async (req, res) => {
 };
 
 // Update course by ID
-
 exports.updateCourse = async (req, res) => {
-  const courseId = req.params.id;
-  let {
-    code,
-    title,
-    short_description,
-    description,
-    language,
-    category,
-    category_id,
-    sub_category_id,
-    sub_category,
-    price,
-    level,
-    status,
-    course_type,
-    city,
-    faqs,
-    outcomes,
-    requirements,
-  } = req.body;
-
   try {
-    // Convert objects to JSON strings if needed
+    const courseId = req.params.id;
+    if (!courseId) return res.status(400).json({ error: 'Course ID is required' });
+
+    let {
+      code,
+      title,
+      short_description,
+      description,
+      language,
+      category,
+      category_id,
+      sub_category_id,
+      sub_category,
+      price,
+      level,
+      status,
+      course_type,
+      city,
+      faqs,
+      outcomes,
+      requirements,
+    } = req.body;
+
     faqs = typeof faqs === 'object' ? JSON.stringify(faqs) : faqs;
     outcomes =
       typeof outcomes === 'object' ? JSON.stringify(outcomes) : outcomes;
@@ -308,7 +306,7 @@ exports.updateCourse = async (req, res) => {
         ? JSON.stringify(requirements)
         : requirements;
 
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       `UPDATE course SET 
        code = ?, title = ?, short_description = ?, description = ?, language = ?, category = ?, category_id = ?, sub_category_id = ?, sub_category = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?, faqs = ?, outcomes = ?, requirements = ?
        WHERE id = ?`,
@@ -347,11 +345,11 @@ exports.updateCourse = async (req, res) => {
 
 // Delete course by ID
 exports.deleteCourse = async (req, res) => {
-  const courseId = req.params.id;
   try {
-    const [result] = await db
-      .promise()
-      .query('DELETE FROM course WHERE id = ?', [courseId]);
+    const courseId = req.params.id;
+    if (!courseId) return res.status(400).json({ error: 'Course ID is required' });
+
+    const [result] = await db.query('DELETE FROM course WHERE id = ?', [courseId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Course not found' });
@@ -369,7 +367,6 @@ exports.getCompetencies = async (req, res) => {
   try {
     // Get all courses with FAQs
     const [courses] = await db
-      .promise()
       .query('SELECT faqs FROM course WHERE faqs IS NOT NULL AND faqs != ""');
 
     // Extract competencies from FAQs

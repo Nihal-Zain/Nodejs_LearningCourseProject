@@ -1,4 +1,3 @@
-// controllers/clientsController.js
 const e = require('express');
 const db = require('../../config/db');
 const path = require('path');
@@ -7,25 +6,31 @@ const getFullImageUrl = (req, filename) => {
   return `${req.protocol}://${req.get('host')}/uploads/${filename}`;
 };
 
-exports.getAllClients = (req, res) => {
+exports.getAllClients = async (req, res) => {
   const query = 'SELECT * FROM clients ORDER BY id DESC';
-  db.query(query, (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const [results] = await db.query(query);
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.getClientById = (req, res) => {
+exports.getClientById = async (req, res) => {
   const clientId = req.params.id;
   const query = 'SELECT * FROM clients WHERE id = ?';
-  db.query(query, [clientId], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (results.length === 0) return res.status(404).json({ error: 'Client not found' });
+  try {
+    const [results] = await db.query(query, [clientId]);
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
     res.json(results[0]);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.createClient = (req, res) => {
+exports.createClient = async (req, res) => {
   const { name, website } = req.body;
 
   if (!req.file) {
@@ -33,16 +38,17 @@ exports.createClient = (req, res) => {
   }
 
   const img_url = getFullImageUrl(req, req.file.filename);
-
   const query = 'INSERT INTO clients (name, img_url, website) VALUES (?, ?, ?)';
-  db.query(query, [name, img_url, website], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
 
+  try {
+    const [result] = await db.query(query, [name, img_url, website]);
     res.status(201).json({ id: result.insertId, name, img_url, website });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.updateClient = (req, res) => {
+exports.updateClient = async (req, res) => {
   const clientId = req.params.id;
   const { name, website } = req.body;
 
@@ -62,20 +68,28 @@ exports.updateClient = (req, res) => {
   query += ' WHERE id = ?';
   params.push(clientId);
 
-  db.query(query, params, (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Client not found' });
-
+  try {
+    const [result] = await db.query(query, params);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
     res.json({ id: clientId, name, website, img_url });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.deleteClient = (req, res) => {
+exports.deleteClient = async (req, res) => {
   const clientId = req.params.id;
   const query = 'DELETE FROM clients WHERE id = ?';
-  db.query(query, [clientId], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Client not found' });
+
+  try {
+    const [result] = await db.query(query, [clientId]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
     res.json({ message: 'Client deleted successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };

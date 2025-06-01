@@ -3,7 +3,7 @@ const db = require('../../config/db');
 // Gets All Category
 exports.getCategory = async (req, res) => {
   try {
-    const [results] = await db.promise().query('SELECT * FROM category');
+    const [results] = await db.query('SELECT * FROM category');
     res.json(results);
   } catch (err) {
     console.error('DB Query Error:', err);
@@ -15,7 +15,7 @@ exports.getCategory = async (req, res) => {
 exports.getCategoryByName = async(req,res) => {
    const categoryName = req.params.categoryName;
   try{
-    const [result] = await db.promise().query('SELECT * FROM `course` WHERE category = ?',[categoryName]);
+    const [result] = await db.query('SELECT * FROM `course` WHERE category = ?',[categoryName]);
     res.json(result);
   }catch(err){
     console.error('DB Query Error:', err);
@@ -27,7 +27,7 @@ exports.getCategoryByName = async(req,res) => {
 exports.getSubCategoryByName = async(req,res) => {
    const subCategoryName = req.params.subCategoryName;
   try{
-    const [result] = await db.promise().query('SELECT * FROM `course` WHERE sub_category = ?',[subCategoryName]);
+    const [result] = await db.query('SELECT * FROM `course` WHERE sub_category = ?',[subCategoryName]);
     res.json(result);
   }catch(err){
     console.error('DB Query Error:', err);
@@ -39,7 +39,7 @@ exports.getSubCategoryByName = async(req,res) => {
 exports.addCategory = async (req, res) => {
   const { code, name, slug, date_added } = req.body;  
   try {
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       'INSERT INTO category (code, name, slug, date_added) VALUES (?, ?, ?, ?)', 
       [code, name, slug, date_added]
     );
@@ -62,7 +62,7 @@ exports.updateCategory = async (req, res) => {
 
   try {
     // Check for duplicate code in other categories
-    const [existing] = await db.promise().query(
+    const [existing] = await db.query(
       'SELECT id FROM category WHERE code = ? AND id != ?',
       [code, id]
     );
@@ -72,7 +72,7 @@ exports.updateCategory = async (req, res) => {
     }
 
     // Proceed with update
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       'UPDATE category SET code = ?, name = ?, slug = ? WHERE id = ?',
       [code, name, slug, id]
     );
@@ -94,7 +94,7 @@ exports.updateCategory = async (req, res) => {
 exports.deleteCategory = async (req, res) => {
   const categoryId = req.params.id;
   try {
-    const [result] = await db.promise().query('DELETE FROM category WHERE id = ?', [categoryId]);
+    const [result] = await db.query('DELETE FROM category WHERE id = ?', [categoryId]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Category not found' });
     }

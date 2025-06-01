@@ -6,7 +6,7 @@ exports.getEvaluationQuestions = async (req, res) => {
 
   try {
     // Fetch all relevant questions
-    const [questions] = await db.promise().query(`
+    const [questions] = await db.query(`
       SELECT q.id AS question_id, q.text, s.title AS section, ss.title AS sub_section
       FROM questions q
       JOIN sections s ON q.section_id = s.id
@@ -16,14 +16,14 @@ exports.getEvaluationQuestions = async (req, res) => {
     `);
 
     // Fetch all choices for those questions
-    const [choices] = await db.promise().query(`
+    const [choices] = await db.query(`
       SELECT id, question_id, text, is_correct
       FROM choices
       WHERE question_id IN (?)
     `, [questions.map(q => q.question_id)]);
 
     // Fetch previous answers (if any)
-    const [existingAnswers] = await db.promise().query(`
+    const [existingAnswers] = await db.query(`
       SELECT question_id, choice_id 
       FROM answers 
       WHERE user_id = ? AND target_user_id = ?
@@ -64,20 +64,20 @@ exports.submitEvaluationAnswers = async (req, res) => {
 
   try {
     for (const ans of answers) {
-      const [existing] = await db.promise().query(`
+      const [existing] = await db.query(`
         SELECT id FROM answers 
         WHERE user_id = ? AND target_user_id = ? AND question_id = ?
       `, [managerId, employeeId, ans.question_id]);
 
       if (existing.length > 0) {
         // ✅ Use existing[0].id
-        await db.promise().query(`
+        await db.query(`
           UPDATE answers 
           SET choice_id = ? 
           WHERE id = ?
         `, [ans.choice_id, existing[0].id]);
       } else {
-        await db.promise().query(`
+        await db.query(`
           INSERT INTO answers (user_id, target_user_id, question_id, choice_id)
           VALUES (?, ?, ?, ?)
         `, [managerId, employeeId, ans.question_id, ans.choice_id]);

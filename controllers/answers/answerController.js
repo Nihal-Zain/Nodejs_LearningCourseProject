@@ -1,74 +1,88 @@
 const db = require('../../config/db');
 
 // Create a new answer
-exports.createAnswer = (req, res) => {
+exports.createAnswer = async (req, res) => {
+  try {
     const { user_id, question_id, choice_id, target_user_id } = req.body;
     const query = 'INSERT INTO answers (user_id, question_id, choice_id, target_user_id) VALUES (?, ?, ?, ?)';
-    db.query(query, [user_id, question_id, choice_id, target_user_id], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: result.insertId, user_id, question_id, choice_id, target_user_id });
-    });
+    const [result] = await db.query(query, [user_id, question_id, choice_id, target_user_id]);
+    res.status(201).json({ id: result.insertId, user_id, question_id, choice_id, target_user_id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Get all answers
-exports.getAllAnswers = (req, res) => {
+exports.getAllAnswers = async (req, res) => {
+  try {
     const query = 'SELECT * FROM answers ORDER BY id DESC';
-    db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
+    const [results] = await db.query(query);
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Get answer by ID
-exports.getAnswerById = (req, res) => {
+exports.getAnswerById = async (req, res) => {
+  try {
     const answerId = req.params.id;
     const query = 'SELECT * FROM answers WHERE id = ?';
-    db.query(query, [answerId], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (results.length === 0) return res.status(404).json({ error: 'Answer not found' });
-        res.json(results[0]);
-    });
+    const [results] = await db.query(query, [answerId]);
+    if (results.length === 0) return res.status(404).json({ error: 'Answer not found' });
+    res.json(results[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Get answers by user_id (who answered)
-exports.getAnswersByUser = (req, res) => {
+exports.getAnswersByUser = async (req, res) => {
+  try {
     const userId = req.params.user_id;
     const query = 'SELECT * FROM answers WHERE user_id = ? ORDER BY id DESC';
-    db.query(query, [userId], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
+    const [results] = await db.query(query, [userId]);
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Get answers by target_user_id (who is evaluated)
-exports.getAnswersByTargetUser = (req, res) => {
+exports.getAnswersByTargetUser = async (req, res) => {
+  try {
     const targetUserId = req.params.target_user_id;
     const query = 'SELECT * FROM answers WHERE target_user_id = ? ORDER BY id DESC';
-    db.query(query, [targetUserId], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
+    const [results] = await db.query(query, [targetUserId]);
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Update an answer by ID
-exports.updateAnswer = (req, res) => {
+exports.updateAnswer = async (req, res) => {
+  try {
     const answerId = req.params.id;
     const { user_id, question_id, choice_id, target_user_id } = req.body;
     const query = 'UPDATE answers SET user_id = ?, question_id = ?, choice_id = ?, target_user_id = ? WHERE id = ?';
-    db.query(query, [user_id, question_id, choice_id, target_user_id, answerId], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (result.affectedRows === 0) return res.status(404).json({ error: 'Answer not found' });
-        res.json({ message: 'Answer updated successfully' });
-    });
+    const [result] = await db.query(query, [user_id, question_id, choice_id, target_user_id, answerId]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Answer not found' });
+    res.json({ message: 'Answer updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Delete an answer by ID
-exports.deleteAnswer = (req, res) => {
+exports.deleteAnswer = async (req, res) => {
+  try {
     const answerId = req.params.id;
     const query = 'DELETE FROM answers WHERE id = ?';
-    db.query(query, [answerId], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (result.affectedRows === 0) return res.status(404).json({ error: 'Answer not found' });
-        res.json({ message: 'Answer deleted successfully' });
-    });
+    const [result] = await db.query(query, [answerId]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Answer not found' });
+    res.json({ message: 'Answer deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };

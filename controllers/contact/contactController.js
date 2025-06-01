@@ -1,50 +1,70 @@
-// controllers/contactController.js
 const e = require('express');
 const db = require('../../config/db');
 const path = require('path');
 
 // Get all contacts
-exports.getAllContacts = (req, res) => {
-  db.query('SELECT * FROM contact_info', (err, results) => {
-    if (err) return res.status(500).json({ error: err });
+exports.getAllContacts = async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM contact_info');
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Get one contact
-exports.getContactById = (req, res) => {
-  db.query('SELECT * FROM contact_info WHERE id = ?', [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: err });
+exports.getContactById = async (req, res) => {
+  try {
+    const [result] = await db.query('SELECT * FROM contact_info WHERE id = ?', [req.params.id]);
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
     res.json(result[0]);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Create new contact
-exports.createContact = (req, res) => {
+exports.createContact = async (req, res) => {
   const { name, email, phone, address } = req.body;
-  db.query('INSERT INTO contact_info (name, email, phone, address) VALUES (?, ?, ?, ?)',
-    [name, email, phone, address],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err });
-      res.json({ message: 'Contact created!', id: result.insertId });
-    });
+  try {
+    const [result] = await db.query(
+      'INSERT INTO contact_info (name, email, phone, address) VALUES (?, ?, ?, ?)',
+      [name, email, phone, address]
+    );
+    res.status(201).json({ message: 'Contact created!', id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Update contact
-exports.updateContact = (req, res) => {
+exports.updateContact = async (req, res) => {
   const { name, email, phone, address } = req.body;
-  db.query('UPDATE contact_info SET name=?, email=?, phone=?, address=? WHERE id=?',
-    [name, email, phone, address, req.params.id],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err });
-      res.json({ message: 'Contact updated!' });
-    });
+  try {
+    const [result] = await db.query(
+      'UPDATE contact_info SET name=?, email=?, phone=?, address=? WHERE id=?',
+      [name, email, phone, address, req.params.id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
+    res.json({ message: 'Contact updated!' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 // Delete contact
-exports.deleteContact = (req, res) => {
-  db.query('DELETE FROM contact_info WHERE id = ?', [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: err });
+exports.deleteContact = async (req, res) => {
+  try {
+    const [result] = await db.query('DELETE FROM contact_info WHERE id = ?', [req.params.id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
     res.json({ message: 'Contact deleted!' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
