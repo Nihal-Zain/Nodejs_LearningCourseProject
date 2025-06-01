@@ -25,14 +25,18 @@ exports.getAllInstructors = async (req, res) => {
 
 // Add a new instructor
 exports.addInstructor = async (req, res) => {
+  console.log('Request body:', req.body);
+  console.log('Uploaded file:', req.file);
+
   const { name, short_description } = req.body;
-  const img = req.file ? req.file.path : null; // Cloudinary returns a full URL
+  const img = req.file ? req.file.path : null; // or req.file.url if using Cloudinary
 
   const sql = 'INSERT INTO instructors (name, img, short_description) VALUES (?, ?, ?)';
   try {
     const [result] = await db.query(sql, [name, img, short_description]);
     res.status(201).json({ id: result.insertId, name, img, short_description });
   } catch (err) {
+    console.error('DB Error:', err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -59,6 +63,9 @@ exports.getInstructorById = async (req, res) => {
 
 // Update instructor (with optional image update)
 exports.updateInstructor = async (req, res) => {
+  console.log('Request body:', req.body);
+  console.log('Uploaded file:', req.file);
+
   const instructorId = req.params.id;
   const { name, short_description } = req.body;
   const imageFilename = req.file?.filename;
@@ -88,6 +95,7 @@ exports.updateInstructor = async (req, res) => {
       img: imageFilename ? getFullImageUrl(req, imageFilename) : undefined
     });
   } catch (err) {
+    console.error('DB Error:', err);
     res.status(500).json({ error: err.message });
   }
 };
