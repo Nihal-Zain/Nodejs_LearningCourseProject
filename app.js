@@ -30,7 +30,7 @@ const answersRouter = require('./routes/answerRouter')
 const app = express();
 
 
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173', "https://europetrainingcenter.conferencai.com/"];
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173', "https://europetrainingcenter.conferencai.com"];
 app.use(cors({
   origin: function (origin, callback) {
     // allow requests with no origin (like mobile apps or curl)
