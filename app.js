@@ -34,7 +34,8 @@ const answersRouter = require('./routes/answerRouter');
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
-  'https://europetrainingcenter.conferencai.com'
+  'https://europetrainingcenter.conferencai.com',
+  'https://euptc.com'
 ];
 
 app.use(cors({
