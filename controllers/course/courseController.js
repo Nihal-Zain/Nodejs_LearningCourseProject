@@ -1,4 +1,55 @@
 const db = require('../../config/db');
+const multer = require('multer');
+const { storage } = require('../../middlewares/cloudinary');
+
+// Helper function for database operations with retry logic
+const executeQuery = async (query, params, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const result = await db.query(query, params);
+      return result;
+    } catch (error) {
+      console.error(`Database query attempt ${i + 1} failed:`, error.message);
+      
+      // if (i === retries - 1) {
+      //   // Last attempt failed, throw the error
+      //   throw error;
+      // }
+      
+      // Check if it's a connection error that we should retry
+      if (error.code === 'ECONNRESET' || 
+          error.code === 'PROTOCOL_CONNECTION_LOST' || 
+          error.code === 'ECONNREFUSED' ||
+          error.code === 'ETIMEDOUT') {
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+        continue;
+      } else {
+        // Non-connection error, don't retry
+        // throw error;
+      }
+    }
+  }
+};
+
+// Configure multer for thumbnail upload using Cloudinary
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Check if file is an image
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
+
+// Export the upload middleware for use in routes
+exports.uploadThumbnail = upload.single('thumbnail');
 
 // Get all courses with filters and pagination
 exports.getCourses = async (req, res) => {
@@ -112,11 +163,9 @@ exports.getCourses = async (req, res) => {
 
     // Build the WHERE clause
     const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-
-    // Get total count for pagination
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';    // Get total count for pagination
     const countQuery = `SELECT COUNT(*) as total FROM course ${whereClause}`;
-    const [countResult] = await db.query(countQuery, params);
+    const [countResult] = await executeQuery(countQuery, params);
     const totalCourses = countResult[0].total;
 
     // Get courses with pagination
@@ -126,8 +175,7 @@ exports.getCourses = async (req, res) => {
       LIMIT ? OFFSET ?
     `;
 
-    const [results] = await db
-      .query(coursesQuery, [...params, limitNum, offset]);
+    const [results] = await executeQuery(coursesQuery, [...params, limitNum, offset]);
 
     // Calculate pagination info
     const totalPages = Math.ceil(totalCourses / limitNum);
@@ -228,8 +276,10 @@ exports.addCourse = async (req, res) => {
       city,
       faqs,
       outcomes,
-      requirements,
-    } = req.body;
+      requirements,    } = req.body;
+
+    // Get thumbnail URL from uploaded file
+    const thumbnail = req.file ? req.file.path : null;
 
     // Convert to JSON strings if they are objects
     faqs = typeof faqs === 'object' ? JSON.stringify(faqs) : faqs;
@@ -238,12 +288,10 @@ exports.addCourse = async (req, res) => {
     requirements =
       typeof requirements === 'object'
         ? JSON.stringify(requirements)
-        : requirements;
-
-    const [result] = await db.query(
+        : requirements;    const [result] = await executeQuery(
       `INSERT INTO course 
-       (code, title, short_description, description, language, category_id, category, sub_category_id, sub_category, price, level, status, course_type, city, faqs, outcomes, requirements) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (code, title, short_description, description, language, category_id, category, sub_category_id, sub_category, price, level, status, course_type, city, faqs, outcomes, requirements, thumbnail) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         code,
         title,
@@ -262,10 +310,15 @@ exports.addCourse = async (req, res) => {
         faqs,
         outcomes,
         requirements,
+        thumbnail,
       ]
     );
 
-    res.status(201).json({ message: 'Course added successfully', courseId: result.insertId });
+    res.status(201).json({ 
+      message: 'Course added successfully', 
+      courseId: result.insertId,
+      thumbnail: thumbnail 
+    });
   } catch (err) {
     console.error('DB Insert Error:', err);
     res.status(500).json({ error: 'Database error' });
@@ -277,6 +330,11 @@ exports.updateCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
     if (!courseId) return res.status(400).json({ error: 'Course ID is required' });
+
+    // Check if req.body exists and has data
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({ error: 'Request body is empty or invalid' });
+    }
 
     let {
       code,
@@ -295,8 +353,10 @@ exports.updateCourse = async (req, res) => {
       city,
       faqs,
       outcomes,
-      requirements,
-    } = req.body;
+      requirements,    } = req.body;
+
+    // Handle thumbnail update - only update if new file is uploaded
+    const thumbnail = req.file ? req.file.path : undefined;
 
     faqs = typeof faqs === 'object' ? JSON.stringify(faqs) : faqs;
     outcomes =
@@ -306,11 +366,39 @@ exports.updateCourse = async (req, res) => {
         ? JSON.stringify(requirements)
         : requirements;
 
-    const [result] = await db.query(
-      `UPDATE course SET 
+    // Build dynamic update query based on whether thumbnail is being updated
+    let updateQuery, updateParams;
+    
+    if (thumbnail) {
+      updateQuery = `UPDATE course SET 
+       code = ?, title = ?, short_description = ?, description = ?, language = ?, category = ?, category_id = ?, sub_category_id = ?, sub_category = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?, faqs = ?, outcomes = ?, requirements = ?, thumbnail = ?
+       WHERE id = ?`;
+      updateParams = [
+        code,
+        title,
+        short_description,
+        description,
+        language,
+        category,
+        category_id,
+        sub_category_id,
+        sub_category,
+        price,
+        level,
+        status,
+        course_type,
+        city,
+        faqs,
+        outcomes,
+        requirements,
+        thumbnail,
+        courseId,
+      ];
+    } else {
+      updateQuery = `UPDATE course SET 
        code = ?, title = ?, short_description = ?, description = ?, language = ?, category = ?, category_id = ?, sub_category_id = ?, sub_category = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?, faqs = ?, outcomes = ?, requirements = ?
-       WHERE id = ?`,
-      [
+       WHERE id = ?`;
+      updateParams = [
         code,
         title,
         short_description,
@@ -329,8 +417,10 @@ exports.updateCourse = async (req, res) => {
         outcomes,
         requirements,
         courseId,
-      ]
-    );
+      ];
+    }
+
+    const [result] = await executeQuery(updateQuery, updateParams);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Course not found' });

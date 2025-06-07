@@ -9,6 +9,7 @@ const {
   deleteCourse,
   getAllUniqueMainCategories,
   getCompetencies,
+  uploadThumbnail,
 } = require('../controllers/course/courseController');
 
 // Get all courses
@@ -27,10 +28,10 @@ router.get('/courses/main-category', getAllUniqueMainCategories);
 router.get('/courses/id/:id', getCourseById);
 
 // Add new course
-router.post('/courses', addCourse);
+router.post('/courses', uploadThumbnail, addCourse);
 
 // Update course by id
-router.put('/courses/id/:id', updateCourse);
+router.put('/courses/id/:id', uploadThumbnail, updateCourse);
 
 // Delete course by id
 router.delete('/courses/id/:id', deleteCourse);

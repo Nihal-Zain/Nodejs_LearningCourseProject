@@ -1,15 +1,25 @@
-// routes/clientsRoutes.js
 const express = require('express');
 const router = express.Router();
-const clientsController = require('../controllers/clients/clientsController');
-// const upload = require('../middlewares/upload');
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+const {
+  getAllClients,
+  getClientById,
+  createClient,
+  updateClient,
+  deleteClient,
+  uploadImage
+} = require('../controllers/clients/clientsController');
 
-router.get('/clients', clientsController.getAllClients);
-router.get('/clients/:id', clientsController.getClientById);
-router.post('/clients', upload.single('image'), clientsController.createClient);
-router.put('/clients/:id', upload.single('image'), clientsController.updateClient);
-router.delete('/clients/:id', clientsController.deleteClient);
+router.get('/clients', getAllClients);
+router.get('/clients/:id', getClientById);
+router.post('/clients', uploadImage, createClient);
+router.put('/clients/:id', uploadImage, updateClient);
+// Handle frontend's method override pattern
+router.post('/clients/:id', uploadImage, (req, res) => {
+  if (req.query._method === 'PUT') {
+    return updateClient(req, res);
+  }
+  res.status(405).json({ error: 'Method not allowed' });
+});
+router.delete('/clients/:id', deleteClient);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
 const app = express();
 
 // Route Imports
@@ -52,6 +53,7 @@ app.use(cors({
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Add support for URL-encoded form data
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
@@ -69,7 +71,7 @@ app.use('/api', settingsRouter);
 app.use('/api', uploadRouter);
 app.use('/api', upload2Router);
 app.use('/api', usersRouter);
-app.use('/api', usersInfoRouter);
+app.use('/api', usersInfoRouter); 
 app.use('/api', couponsRoutes);
 app.use('/api', instructorRoutes);
 app.use('/api', contactRoutes);
@@ -83,3 +85,4 @@ app.use('/api', answersRouter);
 
 // Export for use in server.js
 module.exports = app;
+

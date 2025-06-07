@@ -11,8 +11,8 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'instructors', // folder name in your cloudinary
-    allowed_formats: ['jpg', 'png', 'jpeg']
+    folder: 'course-thumbnails', // folder name in your cloudinary
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
   },
 });
 
