@@ -82,12 +82,13 @@ exports.getCourses = async (req, res) => {
     if (category && category.trim() !== '') {
       conditions.push('category = ?');
       params.push(category.trim());
-    }
-
-    // Sub-category filter
+    }    // Sub-category filter - use case-insensitive comparison
     if (sub_category && sub_category.trim() !== '') {
-      conditions.push('sub_category = ?');
+      conditions.push('LOWER(sub_category) = LOWER(?)');
       params.push(sub_category.trim());
+      
+      // Log the subcategory search for debugging
+      console.log('Filtering by subcategory:', sub_category.trim());
     }
 
     // City/Location filter (supports comma-separated values in database)
@@ -159,11 +160,15 @@ exports.getCourses = async (req, res) => {
     if (maxPrice && !isNaN(parseFloat(maxPrice))) {
       conditions.push('price <= ?');
       params.push(parseFloat(maxPrice));
-    }
-
-    // Build the WHERE clause
+    }    // Build the WHERE clause
     const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';    // Get total count for pagination
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+      
+    // Log the complete query for debugging
+    console.log('SQL Conditions:', conditions);
+    console.log('SQL Parameters:', params);
+      
+    // Get total count for pagination
     const countQuery = `SELECT COUNT(*) as total FROM course ${whereClause}`;
     const [countResult] = await executeQuery(countQuery, params);
     const totalCourses = countResult[0].total;
@@ -216,10 +221,14 @@ exports.getSubCategories = async (req, res) => {
     const category = req.params.category;
     if (!category) return res.status(400).json({ error: 'Category is required' });
 
+    console.log('Getting subcategories for category:', category);
+
     const [results] = await db.query(
-      'SELECT DISTINCT sub_category FROM course WHERE category = ?',
+      'SELECT DISTINCT sub_category FROM course WHERE category = ? ORDER BY sub_category',
       [category]
     );
+    
+    console.log('Found subcategories:', results);
     res.json(results);
   } catch (err) {
     console.error('DB Query Error:', err);
