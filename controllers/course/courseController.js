@@ -256,6 +256,38 @@ exports.getCourseById = async (req, res) => {
   }
 };
 
+// Helper to slugify a string (e.g., "My Course Name" -> "my-course-name")
+function slugify(text) {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[\s\W-]+/g, '-') // Replace spaces and non-word chars with -
+    .replace(/^-+|-+$/g, '');  // Remove leading/trailing dashes
+}
+
+// Get course by name (slugified title)
+exports.getCourseByName = async (req, res) => {
+  try {
+    const { name } = req.params;
+    if (!name) return res.status(400).json({ error: 'Course name is required' });
+
+    // Get all courses and find by slugified title
+    const [results] = await db.query('SELECT * FROM course');
+    const course = results.find(
+      (c) => slugify(c.title) === name // Only slugify the title
+    );
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+    res.json(course);
+  } catch (err) {
+    console.error('DB Query Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
+
 // Add new course
 exports.addCourse = async (req, res) => {
   try {
@@ -460,6 +492,44 @@ exports.getCompetencies = async (req, res) => {
       .query('SELECT faqs FROM course WHERE faqs IS NOT NULL AND faqs != ""');
 
     // Extract competencies from FAQs
+    const competencies = Array.from(
+      new Set(
+        courses.flatMap((course) => {
+          try {
+            const faqsObj =
+              typeof course.faqs === 'string'
+                ? JSON.parse(course.faqs)
+                : course.faqs;
+            return faqsObj ? Object.keys(faqsObj) : [];
+          } catch {
+            return [];
+          }
+        })
+      )
+    );
+
+    res.json(competencies);
+  } catch (err) {
+    console.error('DB Query Error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
+
+// Get unique competencies for a specific category
+exports.getCompetenciesByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
+    if (!category) {
+      return res.status(400).json({ error: 'Category is required' });
+    }
+
+    // Get all courses in the category with FAQs
+    const [courses] = await db.query(
+      'SELECT faqs FROM course WHERE category = ? AND faqs IS NOT NULL AND faqs != ""',
+      [category]
+    );
+
+    // Extract unique competencies from FAQs
     const competencies = Array.from(
       new Set(
         courses.flatMap((course) => {
