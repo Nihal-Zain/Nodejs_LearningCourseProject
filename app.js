@@ -28,6 +28,8 @@ const questionsRoutes = require('./routes/questionRoutes');
 const choiceRoutes = require('./routes/choiceRoutes');
 const subSectionsRoutes = require('./routes/subSectionsRoutes');
 const organizationRoutes = require('./routes/organizationsRoutes');
+const partnersRoutes = require('./routes/partnersRoutes');
+const galleryRoutes = require('./routes/galleryRoutes');
 const managerEvaluationRoute = require('./routes/managerEvaluation.routes');
 const answersRouter = require('./routes/answerRouter');
 
@@ -60,6 +62,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', blogsRouter); 
 app.use('/api', clientsRoutes);
 app.use('/api', organizationRoutes);
+app.use('/api', partnersRoutes);
+app.use('/api', galleryRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', courseRoutes);
 app.use('/api', questionRoutes);
