@@ -308,22 +308,22 @@ exports.addCourse = async (req, res) => {
       city,
       faqs,
       outcomes,
-      requirements,    } = req.body;
+      requirements,
+      duration // <-- Add this line
+    } = req.body;
 
     // Get thumbnail URL from uploaded file
     const thumbnail = req.file ? req.file.path : null;
 
     // Convert to JSON strings if they are objects
     faqs = typeof faqs === 'object' ? JSON.stringify(faqs) : faqs;
-    outcomes =
-      typeof outcomes === 'object' ? JSON.stringify(outcomes) : outcomes;
-    requirements =
-      typeof requirements === 'object'
-        ? JSON.stringify(requirements)
-        : requirements;    const [result] = await executeQuery(
+    outcomes = typeof outcomes === 'object' ? JSON.stringify(outcomes) : outcomes;
+    requirements = typeof requirements === 'object' ? JSON.stringify(requirements) : requirements;
+
+    const [result] = await executeQuery(
       `INSERT INTO course 
-       (code, title, short_description, description, language, category_id, category, sub_category_id, sub_category, price, level, status, course_type, city, faqs, outcomes, requirements, thumbnail) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (code, title, short_description, description, language, category_id, category, sub_category_id, sub_category, price, level, status, course_type, city, faqs, outcomes, requirements, thumbnail, duration) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         code,
         title,
@@ -343,6 +343,7 @@ exports.addCourse = async (req, res) => {
         outcomes,
         requirements,
         thumbnail,
+        duration // <-- Add this line
       ]
     );
 
@@ -361,10 +362,13 @@ exports.addCourse = async (req, res) => {
 exports.updateCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
+    console.log('Update request for courseId:', courseId);
+    console.log('Update body:', req.body);
     if (!courseId) return res.status(400).json({ error: 'Course ID is required' });
 
     // Check if req.body exists and has data
     if (!req.body || Object.keys(req.body).length === 0) {
+      console.log('Request body is empty or invalid');
       return res.status(400).json({ error: 'Request body is empty or invalid' });
     }
 
@@ -385,7 +389,9 @@ exports.updateCourse = async (req, res) => {
       city,
       faqs,
       outcomes,
-      requirements,    } = req.body;
+      requirements,
+      duration // <-- Add this line
+    } = req.body;
 
     // Handle thumbnail update - only update if new file is uploaded
     const thumbnail = req.file ? req.file.path : undefined;
@@ -400,10 +406,10 @@ exports.updateCourse = async (req, res) => {
 
     // Build dynamic update query based on whether thumbnail is being updated
     let updateQuery, updateParams;
-    
+
     if (thumbnail) {
       updateQuery = `UPDATE course SET 
-       code = ?, title = ?, short_description = ?, description = ?, language = ?, category = ?, category_id = ?, sub_category_id = ?, sub_category = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?, faqs = ?, outcomes = ?, requirements = ?, thumbnail = ?
+       code = ?, title = ?, short_description = ?, description = ?, language = ?, category = ?, category_id = ?, sub_category_id = ?, sub_category = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?, faqs = ?, outcomes = ?, requirements = ?, thumbnail = ?, duration = ?
        WHERE id = ?`;
       updateParams = [
         code,
@@ -424,11 +430,12 @@ exports.updateCourse = async (req, res) => {
         outcomes,
         requirements,
         thumbnail,
+        duration, 
         courseId,
       ];
     } else {
       updateQuery = `UPDATE course SET 
-       code = ?, title = ?, short_description = ?, description = ?, language = ?, category = ?, category_id = ?, sub_category_id = ?, sub_category = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?, faqs = ?, outcomes = ?, requirements = ?
+       code = ?, title = ?, short_description = ?, description = ?, language = ?, category = ?, category_id = ?, sub_category_id = ?, sub_category = ?, price = ?, level = ?, status = ?, course_type = ?, city = ?, faqs = ?, outcomes = ?, requirements = ?, duration = ?
        WHERE id = ?`;
       updateParams = [
         code,
@@ -448,13 +455,20 @@ exports.updateCourse = async (req, res) => {
         faqs,
         outcomes,
         requirements,
+        duration, // <-- Add this line
         courseId,
       ];
     }
 
+    console.log('Update query:', updateQuery);
+    console.log('Update params:', updateParams);
+
     const [result] = await executeQuery(updateQuery, updateParams);
 
+    console.log('Update result:', result);
+
     if (result.affectedRows === 0) {
+      console.log('No course found to update.');
       return res.status(404).json({ error: 'Course not found' });
     }
 

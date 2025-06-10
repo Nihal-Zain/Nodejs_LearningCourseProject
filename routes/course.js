@@ -34,6 +34,7 @@ router.get('/courses/name/:name', getCourseByName);
 // Add new course
 router.post('/courses', uploadThumbnail, addCourse);
 
+
 // Update course by id
 router.put('/courses/id/:id', uploadThumbnail, updateCourse);
 
