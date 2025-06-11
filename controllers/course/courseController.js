@@ -59,7 +59,7 @@ exports.getCourses = async (req, res) => {
       category,
       sub_category,
       city,
-      level,
+      duration: level, // Reusing level for duration
       search,
       faqs,
       competencies,
