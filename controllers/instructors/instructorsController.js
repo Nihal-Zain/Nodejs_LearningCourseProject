@@ -65,10 +65,6 @@ exports.getAllInstructors = async (req, res) => {
 // Add a new instructor
 exports.addInstructor = async (req, res) => {
   try {
-    console.log('🎯 Instructor endpoint hit!');
-    console.log('BODY:', req.body);
-    console.log('FILE:', req.file);
-
     const { name, short_description } = req.body;
     const img = req.file ? req.file.path : null;
 

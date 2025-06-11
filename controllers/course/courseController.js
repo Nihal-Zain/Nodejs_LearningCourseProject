@@ -57,7 +57,7 @@ exports.getCourses = async (req, res) => {
     // Extract query parameters
     const {
       category,
-      sub_category,
+      subCategory,
       city,
       duration: level, // Reusing level for duration
       search,
@@ -68,7 +68,6 @@ exports.getCourses = async (req, res) => {
       page = 1,
       limit = 25,
     } = req.query;
-
     // Convert page and limit to integers
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 25;
@@ -83,19 +82,12 @@ exports.getCourses = async (req, res) => {
     }
     
     // Sub-category filter with improved debugging and handling
-    if (sub_category && sub_category.trim() !== '') {
-      const trimmedSubCategory = sub_category.trim();
-      
-      // Log subcategory value for debugging
-      console.log('Filtering by subcategory:', trimmedSubCategory);
-      console.log('Type of subcategory:', typeof trimmedSubCategory);
+    if (subCategory && subCategory.trim() !== '') {
+      const trimmedSubCategory = subCategory.trim();
       
       // First try a case-insensitive exact match
       conditions.push('LOWER(sub_category) = LOWER(?)');
       params.push(trimmedSubCategory);
-      
-      // Add extra logging to help debug
-      console.log('SQL condition added for subcategory:', conditions[conditions.length-1]);
     }
     
     // City/Location filter (supports comma-separated values in database)
@@ -108,9 +100,6 @@ exports.getCourses = async (req, res) => {
     if (level && level.trim() !== '') {
       // Assuming level parameter is reused for duration filtering
       const durationValue = level.trim().toLowerCase();
-      
-      // Log the duration filter for debugging
-      console.log('Filtering by duration:', durationValue);
       
       // Handle text-based durations like "one week", "two weeks", etc.
       conditions.push('LOWER(duration) LIKE ?');
@@ -171,11 +160,7 @@ exports.getCourses = async (req, res) => {
     }    // Build the WHERE clause
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-      
-    // Log the complete query for debugging
-    console.log('SQL Conditions:', conditions);
-    console.log('SQL Parameters:', params);
-      
+
     // Get total count for pagination
     const countQuery = `SELECT COUNT(*) as total FROM course ${whereClause}`;
     const [countResult] = await executeQuery(countQuery, params);
@@ -208,7 +193,7 @@ exports.getCourses = async (req, res) => {
       },
       filters: {
         category,
-        sub_category,
+        subCategory,
         city,
         level,
         search,
@@ -229,14 +214,10 @@ exports.getSubCategories = async (req, res) => {
     const category = req.params.category;
     if (!category) return res.status(400).json({ error: 'Category is required' });
 
-    console.log('Getting subcategories for category:', category);
-
     const [results] = await db.query(
       'SELECT DISTINCT sub_category FROM course WHERE category = ? ORDER BY sub_category',
       [category]
     );
-    
-    console.log('Found subcategories:', results);
     res.json(results);
   } catch (err) {
     console.error('DB Query Error:', err);
@@ -379,13 +360,10 @@ exports.addCourse = async (req, res) => {
 exports.updateCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
-    console.log('Update request for courseId:', courseId);
-    console.log('Update body:', req.body);
     if (!courseId) return res.status(400).json({ error: 'Course ID is required' });
 
     // Check if req.body exists and has data
     if (!req.body || Object.keys(req.body).length === 0) {
-      console.log('Request body is empty or invalid');
       return res.status(400).json({ error: 'Request body is empty or invalid' });
     }
 
@@ -476,16 +454,9 @@ exports.updateCourse = async (req, res) => {
         courseId,
       ];
     }
-
-    console.log('Update query:', updateQuery);
-    console.log('Update params:', updateParams);
-
     const [result] = await executeQuery(updateQuery, updateParams);
 
-    console.log('Update result:', result);
-
     if (result.affectedRows === 0) {
-      console.log('No course found to update.');
       return res.status(404).json({ error: 'Course not found' });
     }
 
