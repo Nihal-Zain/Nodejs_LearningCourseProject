@@ -76,37 +76,45 @@ exports.getCourses = async (req, res) => {
 
     // Build WHERE clause conditions
     const conditions = [];
-    const params = [];
-
-    // Category filter
+    const params = [];    // Category filter
     if (category && category.trim() !== '') {
       conditions.push('category = ?');
       params.push(category.trim());
-    }    // Sub-category filter - use case-insensitive comparison
-    if (sub_category && sub_category.trim() !== '') {
-      conditions.push('LOWER(sub_category) = LOWER(?)');
-      params.push(sub_category.trim());
-      
-      // Log the subcategory search for debugging
-      console.log('Filtering by subcategory:', sub_category.trim());
     }
-
+    
+    // Sub-category filter with improved debugging and handling
+    if (sub_category && sub_category.trim() !== '') {
+      const trimmedSubCategory = sub_category.trim();
+      
+      // Log subcategory value for debugging
+      console.log('Filtering by subcategory:', trimmedSubCategory);
+      console.log('Type of subcategory:', typeof trimmedSubCategory);
+      
+      // First try a case-insensitive exact match
+      conditions.push('LOWER(sub_category) = LOWER(?)');
+      params.push(trimmedSubCategory);
+      
+      // Add extra logging to help debug
+      console.log('SQL condition added for subcategory:', conditions[conditions.length-1]);
+    }
+    
     // City/Location filter (supports comma-separated values in database)
     if (city && city.trim() !== '') {
       conditions.push('city LIKE ?');
       params.push(`%${city.trim()}%`);
     }
 
-    // Level filter
+    // Duration filter (replacing the Level filter)
     if (level && level.trim() !== '') {
-      const levelValue = level.trim().toLowerCase();
-      if (levelValue === 'beginner') {
-        conditions.push('LOWER(level) = ?');
-        params.push('beginner');
-      } else {
-        conditions.push('LOWER(level) != ?');
-        params.push('beginner');
-      }
+      // Assuming level parameter is reused for duration filtering
+      const durationValue = level.trim().toLowerCase();
+      
+      // Log the duration filter for debugging
+      console.log('Filtering by duration:', durationValue);
+      
+      // Handle text-based durations like "one week", "two weeks", etc.
+      conditions.push('LOWER(duration) LIKE ?');
+      params.push(`%${durationValue}%`);
     }
 
     // Search filter (searches in title, city, and category)
