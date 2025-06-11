@@ -53,13 +53,12 @@ exports.uploadThumbnail = upload.single('thumbnail');
 
 // Get all courses with filters and pagination
 exports.getCourses = async (req, res) => {
-  try {
-    // Extract query parameters
+  try {    // Extract query parameters
     const {
       category,
       subCategory,
       city,
-      duration: level, // Reusing level for duration
+      duration, // Use the direct parameter name 'duration'
       search,
       faqs,
       competencies,
@@ -89,21 +88,23 @@ exports.getCourses = async (req, res) => {
       conditions.push('LOWER(sub_category) = LOWER(?)');
       params.push(trimmedSubCategory);
     }
-    
-    // City/Location filter (supports comma-separated values in database)
+      // City/Location filter (supports comma-separated values in database)
     if (city && city.trim() !== '') {
       conditions.push('city LIKE ?');
       params.push(`%${city.trim()}%`);
     }
 
-    // Duration filter (replacing the Level filter)
-    if (level && level.trim() !== '') {
-      // Assuming level parameter is reused for duration filtering
-      const durationValue = level.trim().toLowerCase();
+    // Duration filter - exact match for specific durations like "One Week", "Two Weeks"
+    if (duration && duration.trim() !== '') {
+      const durationValue = duration.trim();
       
-      // Handle text-based durations like "one week", "two weeks", etc.
-      conditions.push('LOWER(duration) LIKE ?');
-      params.push(`%${durationValue}%`);
+      // Log the duration filter for debugging
+      console.log('Filtering by duration:', durationValue);
+      
+      // Check if it's a common duration format like "One Week" or "Two Weeks"
+      // Using case-insensitive comparison
+      conditions.push('LOWER(duration) = LOWER(?)');
+      params.push(durationValue);
     }
 
     // Search filter (searches in title, city, and category)
@@ -190,12 +191,11 @@ exports.getCourses = async (req, res) => {
         limit: limitNum,
         hasNextPage,
         hasPrevPage,
-      },
-      filters: {
+      },      filters: {
         category,
         subCategory,
         city,
-        level,
+        duration,
         search,
         faqs,
         minPrice,
