@@ -32,6 +32,7 @@ const partnersRoutes = require('./routes/partnersRoutes');
 const galleryRoutes = require('./routes/galleryRoutes');
 const managerEvaluationRoute = require('./routes/managerEvaluation.routes');
 const answersRouter = require('./routes/answerRouter');
+const countryRoutes = require('./routes/countryRoutes');
 
 // CORS Configuration
 const allowedOrigins = [
@@ -88,6 +89,7 @@ app.use('/api', choiceRoutes);
 app.use('/api', subSectionsRoutes);
 app.use('/api', managerEvaluationRoute);
 app.use('/api', answersRouter);
+app.use('/api', countryRoutes);
 
 // Export for use in server.js
 module.exports = app;
