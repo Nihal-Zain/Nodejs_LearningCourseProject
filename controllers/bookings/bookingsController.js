@@ -4,14 +4,14 @@ const db = require('../../config/db');
 // Create a new booking
 exports.createBooking = async (req, res) => {
   try {
-    const { booking_date, location, name, email, phone } = req.body;
+    const { booking_date, location, name, email, phone,course_name } = req.body;
     const price = 4490.00; // fixed price
 
     const query = `
-      INSERT INTO bookings (booking_date, location, name, email, phone, price)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO bookings (booking_date, location, name, email, phone, price,course_name)
+      VALUES (?, ?, ?, ?, ?, ?,?)
     `;
-    const [result] = await db.query(query, [booking_date, location, name, email, phone, price]);
+    const [result] = await db.query(query, [booking_date, location, name, email, phone, price,course_name]);
 
     res.status(201).json({ message: 'Booking successful', bookingId: result.insertId });
   } catch (err) {
